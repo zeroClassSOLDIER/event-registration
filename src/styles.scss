@@ -1,0 +1,103 @@
+.bs .bg-sharepoint {
+    background-color: #2C3482 !important;
+}
+
+.bs .btn-primary, .bs .btn-primary:disabled, .bs .btn-primary.disabled {
+    background-color: #2C3482;
+    border-color: #2c3482;
+}
+
+.bs .btn-outline-primary, .bs .btn-outline-primary:disabled, .bs .btn-outline-primary.disabled {
+    border-color: #2C3482;
+    color: #2C3482;
+}
+
+.bs .btn-primary:hover {
+    background-color: #004c86;
+    border-color: #4EF2EE;
+    color: #fff;
+    font-weight: bold;
+}
+
+.bs .btn-outline-primary:hover {
+    background-color: #004c86;
+    border-color: #4EF2EE;
+}
+
+.bs .btn-secondary:hover {
+    color: #fff;
+    background-color: #5c636a;
+    border-color: #565e64;
+    font-weight: bold;
+}
+
+.bs .navbar > .container, .bs .navbar > .container-fluid, .bs .navbar > .container-sm, .bs .navbar > .container-md, .bs .navbar > .container-lg, .bs .navbar > .container-xl, .bs .navbar > .container-xxl {
+    display: flex;
+    flex-wrap: inherit;
+    align-items: center;
+    justify-content: space-between;
+    background: url(../assets/era.png) no-repeat 50% 50%;
+}
+
+.align-middle {
+    vertical-align: middle !important;
+    overflow-wrap: break-word; 
+}
+/* Hide the default page title */
+.ms-webpart-chrome-title {
+    display: none;
+ }
+  /* Fix the bottom margin of the webpart */
+  .ms-webpartzone-cell {
+    margin-bottom: 25px;
+}  
+/* Reset the left margin due to hiding sideNavBox */
+#contentBox {
+    margin-left: 20px !important;
+}
+/* Remove the extra top padding on the content row */
+#contentRow {
+    padding-top: 0 !important;
+}
+/** Hides the first webpart zone */
+#DeltaPlaceHolderMain > table:first-child > tbody > tr:first-child > td:first-child {
+    width: 0%;
+}
+/** Makes the main webpart zone full width */
+#DeltaPlaceHolderMain > table:first-child > tbody > tr:first-child > td:last-child {
+    width: 100%;
+}
+/* Hide the default search box */
+#DeltaPlaceHolderSearchArea {
+    display: none;
+}
+  /* Clear the extra padding at the bottom of the app */
+  #s4-bodyContainer {
+    padding-bottom: initial;
+}
+  /* Hide the title row at the top of the page */
+#s4-titlerow {
+    height: 0;
+    padding: 0;
+}
+#sideNavBox {
+    display: none;
+}
+/* Hide the title content at the top of the page */
+#titleAreaBox {
+    display: none;
+}
+/* Remove the bottom border on the documents list */
+.eventDocsList.tbl-footer{
+    border-bottom: 0px !important;    
+}
+/* Remove the table striping on the documents list */
+.eventDocsList>tbody>tr:nth-of-type(odd) {
+    background: none !important;
+    --bs-table-accent-bg: none !important;
+    color: inherit !important;
+}
+/* Remove the table border on the documents list */
+.eventDocsList thead, .eventDocsList tbody, .eventDocsList tfoot, .eventDocsList tr, .eventDocsList td, .eventDocsList th {
+    border-style: none !important;
+}
