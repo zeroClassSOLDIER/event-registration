@@ -78,7 +78,7 @@ export class App {
               DataSource.StatusFilters[0].isSelected = value ? true : false;
 
               // Filter the dashboard
-              this._dashboard.filter(11, value ? "" : "Active");
+              this._dashboard.filter(0, value ? "" : "Active");
             },
           },
         ],
@@ -99,7 +99,7 @@ export class App {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
           columnDefs: [
             {
-              targets: [0, 6, 10, 12, 13],
+              targets: [0, 6, 10, 11, 12],
               orderable: false,
               searchable: false,
             },
@@ -125,7 +125,7 @@ export class App {
                 return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
               }
             },
-            this._isAdmin ? { targets: [10, 13], visible: false } : { targets: [12], visible: false },
+            this._isAdmin ? { targets: [10, 12], visible: false } : { targets: [11], visible: false },
           ],
           // Add some classes to the dataTable elements
           drawCallback: function () {
@@ -141,7 +141,7 @@ export class App {
           // Sort descending by Start Date
           order: [[3, "asc"]],
           language: {
-            emptyTable: "No active events were found",
+            emptyTable: "No events were found",
           },
         },
         columns: [
@@ -150,6 +150,13 @@ export class App {
             name: "",
             title: "",
             onRenderCell: (el, column, item: IEventItem) => {
+              // Set the filter/search value
+              let today = moment();
+              let startDate = item.StartDate;
+              let isActive = moment(startDate).isAfter(today);
+              el.setAttribute("data-search", isActive ? "Active" : "Not Active");
+
+              // Render the tooltip
               Components.Tooltip({
                 el: el,
                 content: "View Event",
@@ -322,21 +329,7 @@ export class App {
             },
           },
           {
-            // 11 - Status
-            name: "Status",
-            title: "Status",
-            onRenderCell: (el, column, item: IEventItem) => {
-              let today = moment();
-              let startDate = item.StartDate;
-              let isActive = moment(startDate).isAfter(today);
-
-              // Set the value
-              el.innerHTML = isActive ? "Active" : "Not Active";
-              //el.classList.add("d-none");
-            }
-          },
-          {
-            // 12 - Administration dropdown
+            // 11 - Administration dropdown
             name: "Manage Event",
             title: "Manage Event",
             onRenderCell: (el, column, item: IEventItem) => {
@@ -344,7 +337,7 @@ export class App {
             },
           },
           {
-            // 13 - Add to Calendar
+            // 12 - Add to Calendar
             name: "",
             title: "",
             onRenderCell: (el, column, item: IEventItem) => {
@@ -358,7 +351,7 @@ export class App {
     // See if we are filtering active items
     if (this._dashboard.getFilter("Event Status").getValue() == null) {
       // Filter the dashboard
-      this._dashboard.filter(11, "Active");
+      this._dashboard.filter(0, "Active");
     }
   }
 }
