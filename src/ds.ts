@@ -3,7 +3,7 @@ import * as moment from "moment";
 import Strings from "./strings";
 
 // Event Item
-export interface IEventItem extends Types.SP.ListItem {
+export interface IEventItem extends Types.SP.ListItemOData {
     Description: string;
     StartDate: string;
     EndDate: string;
@@ -84,6 +84,7 @@ export class DataSource {
                     // Load the data
                     if (this._isAdmin) {
                         List(Strings.Lists.Events).Items().query({
+                            Expand: ["AttachmentFiles"],
                             GetAllItems: true,
                             OrderBy: ["StartDate asc"],
                             Top: 5000
@@ -100,6 +101,7 @@ export class DataSource {
                     else {
                         let today = moment().toISOString();
                         List(Strings.Lists.Events).Items().query({
+                            Expand: ["AttachmentFiles"],
                             Filter: `StartDate ge '${today}'`,
                             GetAllItems: true,
                             OrderBy: ["StartDate asc"],

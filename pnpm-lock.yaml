@@ -7,8 +7,8 @@ specifiers:
   css-loader: ^6.3.0
   datatables.net: ^1.11.2
   datatables.net-bs5: ^1.11.2
-  dattatable: ^1.2.6
-  gd-sprest-bs: ^8.6.4
+  dattatable: ^1.2.7
+  gd-sprest-bs: ^8.6.6
   html-loader: ^2.1.2
   jquery: ^3.6.0
   moment: ^2.29.1
@@ -25,8 +25,8 @@ specifiers:
 dependencies:
   datatables.net: 1.11.3
   datatables.net-bs5: 1.11.3
-  dattatable: 1.2.6_89f968e3d7b38f63a422eb4abf4ae19d
-  gd-sprest-bs: 8.6.4
+  dattatable: 1.2.7_ff27e66b4c93d1c901912d17336ef93a
+  gd-sprest-bs: 8.6.6
   jquery: 3.6.0
   moment: 2.29.1
 
@@ -1801,8 +1801,8 @@ packages:
       jquery: 3.6.0
     dev: false
 
-  /dattatable/1.2.6_89f968e3d7b38f63a422eb4abf4ae19d:
-    resolution: {integrity: sha512-Z12ab3b4SfZEB9AlFVtpv5jx1FG/+neuw7ZbKPFY4ctt/YAGbCjoageWP0JR5PRwq4MyhZLxzXmACmYI9BTiig==}
+  /dattatable/1.2.7_ff27e66b4c93d1c901912d17336ef93a:
+    resolution: {integrity: sha512-ztsAya7B9esqSDo7mIiOPipSNjRQLTeL4AgnQOsRUbNpJuyHCs0GFopB2T/R/WQVfxbTCfdcrw945sMvxa5Gog==}
     peerDependencies:
       datatables.net: '*'
       datatables.net-bs5: '*'
@@ -1812,7 +1812,7 @@ packages:
     dependencies:
       datatables.net: 1.11.3
       datatables.net-bs5: 1.11.3
-      gd-sprest-bs: 8.6.4
+      gd-sprest-bs: 8.6.6
       jquery: 3.6.0
       moment: 2.29.1
     dev: false
@@ -2089,12 +2089,12 @@ packages:
       - '@popperjs/core'
     dev: false
 
-  /gd-sprest-bs/8.6.4:
-    resolution: {integrity: sha512-XW8se9YfpncQJUGy4PRo6LW0Xx8NmFZkBep1bCBt/H17fuckQ5gOwq+Jgt9lsKJmSsDdTN6BDMc5M1KlXXzrhA==}
+  /gd-sprest-bs/8.6.6:
+    resolution: {integrity: sha512-xIHJBGmz9HT0UVmxWdGDFF7pM39oHjoDrnBh06ZGTIQDqHIe3BbqG4iZ6xWvdTJkvUwIx0KwhY/DZCpUiZBz5w==}
     dependencies:
       flatpickr: 4.6.9
       gd-bs: 5.1.4
-      gd-sprest: 6.6.7
+      gd-sprest: 6.6.9
       gd-sprest-def: 1.0.7
     transitivePeerDependencies:
       - '@popperjs/core'
@@ -2104,8 +2104,8 @@ packages:
     resolution: {integrity: sha512-IoUDoAO+9A+x1w8qfhF3XuzOtq3vWo9iXEGDSpJvPN5HBPMeHaY+fVIDzEPHKTXC2Imq0Oz8CvIYGmGj1VDxLA==}
     dev: false
 
-  /gd-sprest/6.6.7:
-    resolution: {integrity: sha512-/qFaD6mVnlzAfhmm6DzW0ILEWrVPjG2GGIPXEDR57OJz0Mu529mRuhEjugZXuBGAJRYp4Dhay/oEcuxphxZJbg==}
+  /gd-sprest/6.6.9:
+    resolution: {integrity: sha512-8G62/i8BO/xzG3HGgFhUVb+tnGwq+eL+Dw+ESE3TTcciSDQgtngI/DELkDAgbVs5dnQMinEg2lHhTpw7WIivvg==}
     dependencies:
       gd-sprest-def: 1.0.7
     dev: false

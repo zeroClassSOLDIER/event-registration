@@ -275,7 +275,7 @@ export class App {
             title: "Documents",
             onRenderCell: (el, column, item: IEventItem) => {
               // Render the document column
-              new DocumentsView(el, item, this._dashboard, this._isAdmin, this._canEditEvent, () => { this.refresh(); });
+              new DocumentsView(el, item, this._isAdmin, this._canEditEvent, () => { this.refresh(); });
             },
           },
           {

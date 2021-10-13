@@ -1,8 +1,9 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { CanvasForm, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, List, Types } from "gd-sprest-bs";
-import { DataSource, IEventItem } from "./ds";
+import { IEventItem } from "./ds";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { fileEarmarkX } from "gd-sprest-bs/build/icons/svgs/fileEarmarkX";
+import { files } from "gd-sprest-bs/build/icons/svgs/files";
 import { upload } from "gd-sprest-bs/build/icons/svgs/upload";
 import Strings from "./strings"
 
@@ -11,51 +12,130 @@ import Strings from "./strings"
  */
 export class DocumentsView {
     // private variables
-    private _itemID: number;
+    private _item: IEventItem = null;
     private _el: HTMLElement = null;
     private _isAdmin: boolean = false;
     private _canEditEvent: boolean = false;
     private _onRefresh: () => void = null;
 
     // Constructor
-    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, isAdmin: boolean, canEditEvent: boolean, onRefresh: () => void) {
-        this._itemID = item.Id;
+    constructor(el: HTMLElement, item: IEventItem, isAdmin: boolean, canEditEvent: boolean, onRefresh: () => void) {
+        this._item = item;
         this._el = el;
         this._isAdmin = isAdmin;
         this._canEditEvent = canEditEvent;
         this._onRefresh = onRefresh;
-        this.Render();
+        this.render();
     }
 
-    private Render() {
-        //create table
-        let actionsTable = document.createElement("table");
-        actionsTable.classList.add("table");
-        actionsTable.classList.add("eventDocsList");
-        // Render the upload tooltip, if user is an admin
-        if (this._isAdmin) {
-            let tableHeadEl = actionsTable.createTHead();
-            let tableRowEl = document.createElement("tr");
-            let tableColEl = document.createElement("td");
-            tableColEl.setAttribute("colspan", "3");
-            tableRowEl.appendChild(tableColEl);
-            tableHeadEl.appendChild(tableRowEl);
-            actionsTable.appendChild(tableHeadEl);
-            this.renderUploadTooltip(tableColEl);
+    // Display the delete modal
+    private deleteDocument(attachment: Types.SP.Attachment) {
+        // Hide the slider
+        CanvasForm.hide();
+
+        // Set the header
+        Modal.setHeader("Delete " + attachment.FileName);
+
+        // Set the body
+        Modal.setBody("Are you sure you want to delete the document?");
+
+        // Hide the auto close
+        Modal.setAutoClose(false);
+        Modal.setCloseEvent(() => {
+            // Show the slider
+            CanvasForm.show();
+        });
+
+        // Set the footer
+        Modal.setFooter(Components.ButtonGroup({
+            buttons: [
+                {
+                    text: "Yes",
+                    type: Components.ButtonTypes.Primary,
+                    onClick: () => {
+                        // Close the dialog
+                        Modal.hide();
+
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Deleting Document");
+                        LoadingDialog.setBody("This will close after the document has been deleted.");
+
+                        // Delete the attachment
+                        attachment.delete().execute(
+                            // Success
+                            () => {
+                                // Parse the attachments
+                                for (let i = 0; i < this._item.AttachmentFiles.results.length; i++) {
+                                    let filename = this._item.AttachmentFiles.results[i].FileName;
+
+                                    // See if this is the target item
+                                    if (attachment.FileName == filename) {
+                                        // Remove this item
+                                        this._item.AttachmentFiles.results.splice(i, 1);
+                                        break;
+                                    }
+                                }
+
+                                // View the attachments
+                                this.viewAttachments();
+
+                                // Hide the loading dialog
+                                LoadingDialog.hide();
+                            },
+
+                            // Error
+                            () => {
+                                // TODO
+                                // Hide the loading dialog
+                                LoadingDialog.hide();
+                            }
+                        )
+                    }
+                },
+                {
+                    text: "No",
+                    type: Components.ButtonTypes.Secondary,
+                    onClick: () => {
+                        // Close the dialog
+                        Modal.hide();
+                    }
+                }
+            ]
+        }).el);
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Renders the attachment icons
+    private render() {
+        // See if attachments exist
+        if (this._item.AttachmentFiles.results.length > 0) {
+            // Render the view attachments tooltip
+            Components.Tooltip({
+                el: this._el,
+                content: "View Attachments",
+                placement: Components.TooltipPlacements.Top,
+                btnProps: {
+                    className: "me-2",
+                    iconType: files,
+                    iconSize: 24,
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Clear the canvas form and modal
+                        CanvasForm.clear();
+                        Modal.clear();
+
+                        // View the attachments
+                        this.viewAttachments();
+                    }
+                }
+            });
         }
-        // render the attachments list
-        this.getAttachments(actionsTable);
 
-        let listDiv = document.createElement("div");
-        listDiv.classList.add("responsive");
-        listDiv.appendChild(actionsTable);
-        this._el.appendChild(listDiv);
-    }
-
-    private renderUploadTooltip(tableColEl: HTMLElement) {
         //Render the upload tooltip
         Components.Tooltip({
-            el: tableColEl,
+            el: this._el,
             content: "Upload a document",
             placement: Components.TooltipPlacements.Top,
             btnProps: {
@@ -65,235 +145,115 @@ export class DocumentsView {
                 toggle: "tooltip",
                 type: Components.ButtonTypes.OutlinePrimary,
                 onClick: () => {
+                    // Show the upload document dialog
                     this.uploadDocument();
                 },
             }
         });
     }
 
+    // Uploads a new attachment file
     private uploadDocument() {
+        // Show the file upload dialog
         Helper.ListForm.showFileDialog().then((fileInfo) => {
+            // Set the loading dialog
             LoadingDialog.setHeader("Upload Document");
-            LoadingDialog.setBody("Uploading document to event");
+            LoadingDialog.setBody("Attaching the document to the event.");
             LoadingDialog.show();
+
+            // Add the attachment
             List(Strings.Lists.Events)
-                .Items(this._itemID)
+                .Items(this._item.Id)
                 .AttachmentFiles()
                 .add(fileInfo.name, fileInfo.data)
                 .execute(
-                    (file) => {
+                    // Success
+                    () => {
                         // Refresh the dashboard
                         this._onRefresh();
 
                         // Hide the dialog
                         LoadingDialog.hide();
                     },
+
+                    // Error
                     (err) => {
-                        console.log("Error uploading the file");
+                        // TODO
+                        // Log to the console
+                        console.log("Error uploading the file", err);
+
+                        // Hide the dialog
                         LoadingDialog.hide();
                     }
                 );
         });
     }
 
-    private getAttachments(actionsTable: HTMLTableElement) {
-        //Get the attachments list
-        let attachments = List(Strings.Lists.Events)
-            .Items(this._itemID)
-            .AttachmentFiles()
-            .executeAndWait().results;
-        if (attachments.length > 0) {
-            //build out the list items
-            let listItems: Components.IListGroupItem[] = [];
-            //create tbody for table
-            let tableTBody = actionsTable.createTBody();
-            attachments.forEach((attachment) => {
-                let attachmentRow = document.createElement("tr");
-                let attachmentTitleCell = document.createElement("td");
-                attachmentTitleCell.classList.add("event-reg-fileName");
-                attachmentTitleCell.innerText = attachment.FileName;
-                let attachmentViewCell = document.createElement("td");
-                attachmentViewCell.classList.add("viewBtn");
-                let attachmentDeleteCell = document.createElement("td");
-                attachmentDeleteCell.classList.add("deleteBtn");
-                attachmentRow.appendChild(attachmentTitleCell);
-                attachmentRow.appendChild(attachmentViewCell);
-                attachmentRow.appendChild(attachmentDeleteCell);
-                tableTBody.appendChild(attachmentRow);
-                actionsTable.appendChild(tableTBody);
-                //Render the view tooltip
-                this.renderViewTooltip(attachmentViewCell, attachment);
+    // Displays the attachments in a slider
+    private viewAttachments() {
+        // Set the header
+        CanvasForm.setHeader("View Attachments");
 
-                if (this._isAdmin) {
-                    //Render the delete tooltip
-                    this.renderDeleteTooltip(attachmentDeleteCell, attachment);
-                }
-            });
-        }
-    }
-
-    private renderViewTooltip(attachmentViewCell: HTMLTableCellElement, attachment: Types.SP.Attachment) {
-        Components.Tooltip({
-            el: attachmentViewCell,
-            content: "View the document",
-            placement: Components.TooltipPlacements.Top,
-            btnProps: {
-                isDisabled: !this._canEditEvent,
-                iconType: fileEarmarkText,
-                iconSize: 24,
-                toggle: "tooltip",
-                type: Components.ButtonTypes.OutlinePrimary,
-                onClick: () => {
-                    this.viewDocument(attachment);
+        // Set the body
+        CanvasForm.setBody(Components.Table({
+            rows: this._item.AttachmentFiles.results,
+            columns: [
+                {
+                    name: "FileName",
+                    title: "File Name"
                 },
-            }
-        });
-    }
-
-    private viewDocument(attachment: Types.SP.Attachment) {
-        let isWopi: boolean = this.isWopi(attachment.FileName);
-        window.open(
-            isWopi
-                ? ContextInfo.webServerRelativeUrl +
-                "/_layouts/15/WopiFrame.aspx?sourcedoc=" +
-                attachment.ServerRelativeUrl +
-                "&action=view"
-                : attachment.ServerRelativeUrl,
-            "_blank"
-        );
-    }
-
-    private renderDeleteTooltip(attachmentDeleteCell: HTMLTableCellElement, attachment: Types.SP.Attachment) {
-        Components.Tooltip({
-            el: attachmentDeleteCell,
-            placement: Components.TooltipPlacements.Top,
-            btnProps: {
-                isDisabled: !this._canEditEvent,
-                iconType: fileEarmarkX,
-                iconSize: 24,
-                toggle: "tooltip",
-                type: Components.ButtonTypes.OutlineDanger,
-                onClick: () => {
-                    //create the confirmation modal
-                    let elModal = document.getElementById(
-                        "event-registration-modal"
-                    );
-                    if (elModal == null) {
-                        //create the element
-                        elModal = document.createElement("div");
-                        elModal.className = "modal";
-                        elModal.id = "event-registration-modal";
-                        document.body.appendChild(elModal);
-                    }
-                    //Create the modal
-                    let modal = Components.Modal({
-                        el: elModal,
-                        title: "Delete Document",
-                        body: "Are you sure you wanted to delete the selected document?",
-                        type: Components.ModalTypes.Medium,
-                        onClose: () => {
-                            if (elModal) {
-                                document.body.removeChild(elModal);
-                                elModal = null;
+                {
+                    name: "",
+                    onRenderCell: (el, col, attachment: Types.SP.Attachment) => {
+                        // Render the view tooltip
+                        Components.Tooltip({
+                            el,
+                            content: "View the document",
+                            btnProps: {
+                                iconType: fileEarmarkText,
+                                iconSize: 24,
+                                type: Components.ButtonTypes.OutlinePrimary,
+                                onClick: () => {
+                                    let isWopi: boolean = Documents.isWopi(attachment.FileName);
+                                    window.open(
+                                        isWopi
+                                            ? ContextInfo.webServerRelativeUrl +
+                                            "/_layouts/15/WopiFrame.aspx?sourcedoc=" +
+                                            attachment.ServerRelativeUrl +
+                                            "&action=view"
+                                            : attachment.ServerRelativeUrl,
+                                        "_blank"
+                                    );
+                                }
                             }
-                        },
-                        onRenderBody: (elBody) => {
-                            let alert = Components.Alert({
-                                type: Components.AlertTypes.Danger,
-                                content: "Error deleting the document",
-                                className: "docDeleteErr",
-                            });
-                            elBody.prepend(alert.el);
-                            alert.hide();
-                        },
-                        onRenderFooter: (elFooter) => {
-                            Components.ButtonGroup({
-                                el: elFooter,
-                                buttons: [
-                                    {
-                                        text: "Yes",
-                                        type: Components.ButtonTypes.Primary,
-                                        onClick: (button) => {
-                                            this.deleteDocument(attachment, modal);
-                                        },
-                                    },
-                                    {
-                                        text: "No",
-                                        type: Components.ButtonTypes.Secondary,
-                                        onClick: () => {
-                                            modal.hide();
-                                        },
-                                    },
-                                ],
-                            });
-                        },
-                    });
-                    modal.show();
-                },
-            },
-            options: {
-                allowHTML: false,
-                animation: "scale",
-                content: "Delete the document",
-                delay: 100,
-                inertia: true,
-                interactive: false,
-                placement: "top",
-                theme: "Danger",
-            },
-        });
-    }
+                        });
 
-    private deleteDocument(attachment: Types.SP.Attachment, modal: Components.IModal) {
-        let elAlert =
-            document.querySelector(".docDeleteErr");
-        let fileName = attachment.FileName;
-        LoadingDialog.setHeader(
-            "Delete Document"
-        );
-        LoadingDialog.setBody(
-            "Deleting the document"
-        );
-        LoadingDialog.show();
-        //Show a dialog
-        List(Strings.Lists.Events)
-            .Items(this._itemID)
-            .AttachmentFiles(fileName)
-            .delete()
-            .execute(
-                () => {
-                    // Refresh the dashboard
-                    this._onRefresh();
-
-                    // Hide the modal/dialog
-                    modal.hide();
-                    LoadingDialog.hide();
-                },
-                () => {
-                    elAlert.classList.remove("d-none");
-                    LoadingDialog.hide();
+                        // See if this is an admin
+                        if (this._isAdmin) {
+                            // Render the delete tooltip
+                            Components.Tooltip({
+                                el,
+                                content: "Delete the document",
+                                btnProps: {
+                                    className: "ms-2",
+                                    isDisabled: !this._canEditEvent,
+                                    iconType: fileEarmarkX,
+                                    iconSize: 24,
+                                    toggle: "tooltip",
+                                    type: Components.ButtonTypes.OutlineDanger,
+                                    onClick: () => {
+                                        // Delete the document
+                                        this.deleteDocument(attachment);
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
-            );
-    }
+            ]
+        }).el);
 
-    private isWopi(file: string) {
-        let extension = file.split(".");
-        switch (extension[extension.length - 1].toLowerCase()) {
-            // Excel
-            case "csv":
-            case "doc":
-            case "docx":
-            //case "pdf":
-            case "ppt":
-            case "pptx":
-            case "xls":
-            case "xlsx":
-                return true;
-                break;
-            // Default
-            default: {
-                return false;
-            }
-        }
+        // Show the slider
+        CanvasForm.show();
     }
 }
