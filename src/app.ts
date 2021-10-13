@@ -99,7 +99,7 @@ export class App {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
           columnDefs: [
             {
-              targets: [0, 6, 10, 11, 12],
+              targets: [6, 10, 11, 12],
               orderable: false,
               searchable: false,
             },
@@ -154,7 +154,7 @@ export class App {
               let today = moment();
               let startDate = item.StartDate;
               let isActive = moment(startDate).isAfter(today);
-              el.setAttribute("data-search", isActive ? "Active" : "Not Active");
+              el.setAttribute("data-search", isActive ? "Active" : "Past");
 
               // Render the tooltip
               Components.Tooltip({
