@@ -11,11 +11,13 @@ export class Registration {
     private _el: HTMLElement = null;
     private _dashboard: Dashboard = null;
     private _item: IEventItem = null;
+    private _onRefresh: () => void= null;
 
-    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard) {
+    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, onRefresh: () => void) {
         this._el = el;
         this._item = item;
         this._dashboard = dashboard;
+        this._onRefresh = onRefresh;
         this.render();
     }
 
@@ -154,8 +156,7 @@ export class Registration {
                             LoadingDialog.hide();
 
                             // Refresh the dashboard
-                            //DataSource.refreshDashboard();
-                            // TODO: Fix
+                            this._onRefresh();
                         },
                         // Error
                         () => {

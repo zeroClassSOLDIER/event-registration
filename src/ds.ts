@@ -1,4 +1,3 @@
-import { Dashboard } from "dattatable";
 import { Components, ContextInfo, List, Types, Web } from "gd-sprest-bs";
 import * as moment from "moment";
 import Strings from "./strings";
@@ -38,17 +37,6 @@ export class DataSource {
     // Events
     private static _events: IEventItem[] = null;
     static get Events(): IEventItem[] { return this._events; }
-    static get ActiveEvents(): IEventItem[] {
-        let activeEvents: IEventItem[] = [];
-        let today = moment();
-        this._events.forEach((event) => {
-            let startDate = event.StartDate;
-            if (moment(startDate).isAfter(today)) {
-                activeEvents.push(event);
-            }
-        })
-        return activeEvents;
-    }
 
     // Check if user is an admin
     private static _isAdmin: boolean = false;
@@ -72,25 +60,12 @@ export class DataSource {
     }
 
     // Status Filters
-    private static _statusFilters: Components.ICheckboxGroupItem[] = null;
+    private static _statusFilters: Components.ICheckboxGroupItem[] = [{
+        label: "Show inactive events",
+        type: Components.CheckboxGroupTypes.Switch,
+        isSelected: false
+    }];
     static get StatusFilters(): Components.ICheckboxGroupItem[] { return this._statusFilters; }
-    static loadStatusFilters(): PromiseLike<Components.ICheckboxGroupItem[]> {
-        // Return a promise
-        return new Promise((resolve, reject) => {
-            // Get the status field
-            List(Strings.Lists.Events).Fields("Location").execute((fld: Types.SP.FieldText) => {
-                let items: Components.ICheckboxGroupItem[] = [];
-                items.push({
-                    label: "Show inactive events",
-                    type: Components.CheckboxGroupTypes.Switch,
-                    isSelected: false
-                });
-                // Set the filters and resolve the promise
-                this._statusFilters = items;
-                resolve(items);
-            }, reject);
-        });
-    }
 
     // User Login Name
     private static _userLoginName = ContextInfo.isSPO ? "i:0#.f|membership|" + ContextInfo.userLoginName : ContextInfo.systemUserKey;
@@ -106,50 +81,48 @@ export class DataSource {
             let web = Web();
             this.loadConfiguration().then(() => {
                 this.GetAdminStatus().then(() => {
-                    this.loadStatusFilters().then(() => {
-                        // Load the data
-                        if (this._isAdmin) {
-                            List(Strings.Lists.Events).Items().query({
-                                GetAllItems: true,
-                                OrderBy: ["StartDate asc"],
-                                Top: 5000
-                            }).execute(
-                                // Success
-                                items => {
-                                    // Resolve the request
-                                    this._events = items.results as any;
-                                },
-                                // Error
-                                () => { reject(); }
-                            );
-                        }
-                        else {
-                            let today = moment().toISOString();
-                            List(Strings.Lists.Events).Items().query({
-                                Filter: `StartDate ge '${today}'`,
-                                GetAllItems: true,
-                                OrderBy: ["StartDate asc"],
-                                Top: 5000
-                            }).execute(
-                                items => {
-                                    // Resolve the request
-                                    this._events = items.results as any;
-                                },
-                                () => { reject(); }
-                            );
-                        }
-                        // Load the user permissions for the Events list
-                        web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
-                            // Save the user permissions
-                            this._eventRegPerms = perm.GetUserEffectivePermissions;
-                        });
+                    // Load the data
+                    if (this._isAdmin) {
+                        List(Strings.Lists.Events).Items().query({
+                            GetAllItems: true,
+                            OrderBy: ["StartDate asc"],
+                            Top: 5000
+                        }).execute(
+                            // Success
+                            items => {
+                                // Resolve the request
+                                this._events = items.results as any;
+                            },
+                            // Error
+                            () => { reject(); }
+                        );
+                    }
+                    else {
+                        let today = moment().toISOString();
+                        List(Strings.Lists.Events).Items().query({
+                            Filter: `StartDate ge '${today}'`,
+                            GetAllItems: true,
+                            OrderBy: ["StartDate asc"],
+                            Top: 5000
+                        }).execute(
+                            items => {
+                                // Resolve the request
+                                this._events = items.results as any;
+                            },
+                            () => { reject(); }
+                        );
+                    }
+                    // Load the user permissions for the Events list
+                    web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
+                        // Save the user permissions
+                        this._eventRegPerms = perm.GetUserEffectivePermissions;
+                    });
 
-                        // Once both queries are complete, return promise
-                        web.done(() => {
-                            // Resolve the request
-                            resolve(this._events);
-                        });
-                    }, reject);
+                    // Once both queries are complete, return promise
+                    web.done(() => {
+                        // Resolve the request
+                        resolve(this._events);
+                    });
                 }, reject);
             }, reject);
         });

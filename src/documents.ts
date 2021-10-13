@@ -11,21 +11,19 @@ import Strings from "./strings"
  */
 export class DocumentsView {
     // private variables
-    private _dashboard: Dashboard = null;
-    private _eventItem: IEventItem = null;
     private _itemID: number;
     private _el: HTMLElement = null;
     private _isAdmin: boolean = false;
     private _canEditEvent: boolean = false;
+    private _onRefresh: () => void = null;
 
     // Constructor
-    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, isAdmin: boolean, canEditEvent: boolean) {
-        this._dashboard = dashboard;
-        this._eventItem = item;
+    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, isAdmin: boolean, canEditEvent: boolean, onRefresh: () => void) {
         this._itemID = item.Id;
         this._el = el;
         this._isAdmin = isAdmin;
         this._canEditEvent = canEditEvent;
+        this._onRefresh = onRefresh;
         this.Render();
     }
 
@@ -85,8 +83,9 @@ export class DocumentsView {
                 .execute(
                     (file) => {
                         // Refresh the dashboard
-                        //DataSource.refreshDashboard();
-                        // TODO: Fix
+                        this._onRefresh();
+
+                        // Hide the dialog
                         LoadingDialog.hide();
                     },
                     (err) => {
@@ -264,10 +263,11 @@ export class DocumentsView {
             .execute(
                 () => {
                     // Refresh the dashboard
-                    //DataSource.refreshDashboard(); 
-                    // TODO: Fix
-                    LoadingDialog.hide();
+                    this._onRefresh();
+
+                    // Hide the modal/dialog
                     modal.hide();
+                    LoadingDialog.hide();
                 },
                 () => {
                     elAlert.classList.remove("d-none");

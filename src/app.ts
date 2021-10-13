@@ -1,4 +1,4 @@
-import { Dashboard, ItemForm } from "dattatable";
+import { Dashboard, ItemForm, LoadingDialog } from "dattatable";
 import { Components, Helper, Web, SPTypes } from "gd-sprest-bs";
 import { calendarEvent } from "gd-sprest-bs/build/icons/svgs/calendarEvent";
 import * as jQuery from "jquery";
@@ -20,7 +20,7 @@ export class App {
   private _canEditEvent: boolean;
   private _canViewEvent: boolean;
   private _dashboard: Dashboard = null;
-  private _el:HTMLElement = null;
+  private _el: HTMLElement = null;
   private _isAdmin: boolean = false;
 
   // Constructor
@@ -34,16 +34,31 @@ export class App {
     this._canViewEvent = Helper.hasPermissions(DataSource.EventRegPerms, [SPTypes.BasePermissionTypes.ViewListItems]);
     this._el = el;
 
-    // Load the filters
-    DataSource.loadStatusFilters().then(() => {
-      // Get admin status
-      this._isAdmin = DataSource.IsAdmin;
+    // Get admin status
+    this._isAdmin = DataSource.IsAdmin;
+
+    // Render the dashboard
+    this.render();
+  }
+
+  // Refreshes the dashboard
+  private refresh() {
+    // Show a loading dialog
+    LoadingDialog.setHeader("Refreshing the Data");
+    LoadingDialog.setBody("This will close after the data is loaded.");
+
+    // Load the events
+    DataSource.init().then(() => {
+      // Clear the element
+      while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
       // Render the dashboard
       this.render();
+
+      // Hide the dialog
+      LoadingDialog.hide();
     });
   }
-
 
   // Renders the dashboard
   private render() {
@@ -59,17 +74,17 @@ export class App {
             header: "Event Status",
             items: DataSource.StatusFilters,
             onFilter: (value: string) => {
-              let filterSet: boolean = value === "" ? false : true
-              DataSource.SetFilter(filterSet);
-              this._dashboard.refresh(
-                value === "" ? DataSource.ActiveEvents : DataSource.Events
-              );
+              // Update the default flag
+              DataSource.StatusFilters[0].isSelected = value ? true : false;
+
+              // Filter the dashboard
+              this._dashboard.filter(11, value ? "" : "Active");
             },
           },
         ],
       },
       navigation: {
-        items: Admin.adminMenuItems(this._dashboard, this._canEditEvent),
+        items: Admin.adminMenuItems(this._dashboard, this._canEditEvent, () => { this.refresh(); }),
       },
       footer: {
         itemsEnd: [
@@ -79,12 +94,12 @@ export class App {
         ],
       },
       table: {
-        rows: this._isAdmin ? DataSource.ActiveEvents : DataSource.Events,
+        rows: DataSource.Events,
         dtProps: {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
           columnDefs: [
             {
-              targets: [0, 6, 10, 11, 12],
+              targets: [0, 6, 10, 12, 13],
               orderable: false,
               searchable: false,
             },
@@ -110,7 +125,7 @@ export class App {
                 return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
               }
             },
-            this._isAdmin ? { targets: [10, 12], visible: false } : { targets: [11], visible: false },
+            this._isAdmin ? { targets: [10, 13], visible: false } : { targets: [12], visible: false },
           ],
           // Add some classes to the dataTable elements
           drawCallback: function () {
@@ -253,7 +268,7 @@ export class App {
             title: "Documents",
             onRenderCell: (el, column, item: IEventItem) => {
               // Render the document column
-              new DocumentsView(el, item, this._dashboard, this._isAdmin, this._canEditEvent);
+              new DocumentsView(el, item, this._dashboard, this._isAdmin, this._canEditEvent, () => { this.refresh(); });
             },
           },
           {
@@ -303,27 +318,47 @@ export class App {
             name: "",
             title: " Registration",
             onRenderCell: (el, column, item: IEventItem) => {
-              new Registration(el, item, this._dashboard);
+              new Registration(el, item, this._dashboard, () => { this.refresh(); });
             },
           },
           {
-            // 11 - Administration dropdown
+            // 11 - Status
+            name: "Status",
+            title: "Status",
+            onRenderCell: (el, column, item: IEventItem) => {
+              let today = moment();
+              let startDate = item.StartDate;
+              let isActive = moment(startDate).isAfter(today);
+
+              // Set the value
+              el.innerHTML = isActive ? "Active" : "Not Active";
+              //el.classList.add("d-none");
+            }
+          },
+          {
+            // 12 - Administration dropdown
             name: "Manage Event",
             title: "Manage Event",
             onRenderCell: (el, column, item: IEventItem) => {
-              new Admin(el, item, this._dashboard, this._canEditEvent, this._canDeleteEvent);
+              new Admin(el, item, this._dashboard, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
             },
           },
           {
-            // 12 - Add to Calendar
+            // 13 - Add to Calendar
             name: "",
             title: "",
             onRenderCell: (el, column, item: IEventItem) => {
               new Calendar(el, item, this._isAdmin);
-            },
-          },
-        ],
-      },
+            }
+          }
+        ]
+      }
     });
+
+    // See if we are filtering active items
+    if (this._dashboard.getFilter("Event Status").getValue() == null) {
+      // Filter the dashboard
+      this._dashboard.filter(11, "Active");
+    }
   }
 }

@@ -12,19 +12,21 @@ export class Admin {
   private _eventItem: IEventItem = null;
   private _canEditEvent: boolean = false;
   private _canDeleteEvent: boolean = false;
+  private _onRefresh: () => void = null;
 
   // Constructor
-  constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, canEditEvent: boolean, canDeleteEvent: boolean) {
+  constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, canEditEvent: boolean, canDeleteEvent: boolean, onRefresh: () => void) {
     this._isAdmin = DataSource.IsAdmin;
     this._dashboard = dashboard;
     this._el = el;
     this._eventItem = item;
     this._canEditEvent = canEditEvent;
     this._canDeleteEvent = canDeleteEvent;
+    this._onRefresh = onRefresh;
     this.renderEventAdminMenu();
   }
 
-  static adminMenuItems(dashboard: Dashboard, canEditEvent: boolean): Components.INavbarItem[] {
+  static adminMenuItems(dashboard: Dashboard, canEditEvent: boolean, onRefresh: () => void): Components.INavbarItem[] {
     let navItems: Components.INavbarItem[] = [];
     if (DataSource.IsAdmin) {
       navItems.push({
@@ -37,8 +39,7 @@ export class Admin {
           ItemForm.create({
             onUpdate: () => {
               // Refresh the dashboard
-              //DataSource.refreshDashboard(); 
-              // TODO: Fix
+              onRefresh();
             },
             onSetFooter: (elFooter) => {
               let btnGroup = elFooter.querySelector('[role="group"]');
@@ -144,8 +145,7 @@ export class Admin {
       itemId: this._eventItem.Id,
       onUpdate: () => {
         // Refresh the dashboard
-        //DataSource.refreshDashboard(); 
-        // TODO: Fix
+        this._onRefresh();
       },
       onSetFooter: (elFooter) => {
         let btnGroup = elFooter.querySelector('[role="group"]');
@@ -227,10 +227,11 @@ export class Admin {
                 this._eventItem.delete().execute(
                   () => {
                     // Refresh the dashboard
-                    //DataSource.refreshDashboard();
-                    // TODO: Fix
-                    LoadingDialog.hide();
+                    this._onRefresh();
+
+                    // Hide the dialog/modal
                     modal.hide();
+                    LoadingDialog.hide();
                   },
                   () => {
                     LoadingDialog.hide();
