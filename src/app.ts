@@ -325,7 +325,7 @@ export class App {
             name: "",
             title: " Registration",
             onRenderCell: (el, column, item: IEventItem) => {
-              new Registration(el, item, this._dashboard, () => { this.refresh(); });
+              new Registration(el, item, () => { this.refresh(); });
             },
           },
           {

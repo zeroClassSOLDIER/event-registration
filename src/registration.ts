@@ -1,6 +1,6 @@
-import { Dashboard, LoadingDialog } from "dattatable";
+import { LoadingDialog } from "dattatable";
 import { Components, ContextInfo, Utility, Web } from "gd-sprest-bs";
-import { DataSource, IEventItem } from "./ds";
+import { IEventItem } from "./ds";
 import * as moment from "moment";
 import { calendarPlusFill } from "gd-sprest-bs/build/icons/svgs/calendarPlusFill"
 import { calendarMinusFill } from "gd-sprest-bs/build/icons/svgs/calendarMinusFill"
@@ -9,14 +9,12 @@ import { personXFill } from "gd-sprest-bs/build/icons/svgs/personXFill";
 
 export class Registration {
     private _el: HTMLElement = null;
-    private _dashboard: Dashboard = null;
     private _item: IEventItem = null;
     private _onRefresh: () => void= null;
 
-    constructor(el: HTMLElement, item: IEventItem, dashboard: Dashboard, onRefresh: () => void) {
+    constructor(el: HTMLElement, item: IEventItem, onRefresh: () => void) {
         this._el = el;
         this._item = item;
-        this._dashboard = dashboard;
         this._onRefresh = onRefresh;
         this.render();
     }
