@@ -10,7 +10,7 @@ import { personXFill } from "gd-sprest-bs/build/icons/svgs/personXFill";
 export class Registration {
     private _el: HTMLElement = null;
     private _item: IEventItem = null;
-    private _onRefresh: () => void= null;
+    private _onRefresh: () => void = null;
 
     constructor(el: HTMLElement, item: IEventItem, onRefresh: () => void) {
         this._el = el;
