@@ -3,12 +3,12 @@ import { Components, Helper, Web, SPTypes } from "gd-sprest-bs";
 import { calendarEvent } from "gd-sprest-bs/build/icons/svgs/calendarEvent";
 import * as jQuery from "jquery";
 import * as moment from "moment";
-import { DataSource, IEventItem } from "./ds";
-import Strings from "./strings";
-import { Admin } from "./admin"
-import { DocumentsView } from "./documents"
-import { Registration } from "./registration";
+import { Admin } from "./admin";
 import { Calendar } from "./calendar";
+import { DocumentsView } from "./documents"
+import { DataSource, IEventItem } from "./ds";
+import { Registration } from "./registration";
+import Strings from "./strings";
 
 
 /**
@@ -62,6 +62,8 @@ export class App {
 
   // Renders the dashboard
   private render() {
+    let admin = new Admin();
+
     // Create the dashboard
     this._dashboard = new Dashboard({
       el: this._el,
@@ -84,7 +86,7 @@ export class App {
         ],
       },
       navigation: {
-        items: Admin.adminMenuItems(this._dashboard, this._canEditEvent, () => { this.refresh(); }),
+        items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); }),
       },
       footer: {
         itemsEnd: [
@@ -333,7 +335,7 @@ export class App {
             name: "Manage Event",
             title: "Manage Event",
             onRenderCell: (el, column, item: IEventItem) => {
-              new Admin(el, item, this._dashboard, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
+              admin.renderEventMenu(el, item, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
             },
           },
           {
