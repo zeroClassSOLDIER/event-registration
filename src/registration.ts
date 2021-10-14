@@ -7,28 +7,57 @@ import { calendarMinusFill } from "gd-sprest-bs/build/icons/svgs/calendarMinusFi
 import { personPlusFill } from "gd-sprest-bs/build/icons/svgs/personPlusFill";
 import { personXFill } from "gd-sprest-bs/build/icons/svgs/personXFill";
 
+/**
+ * Registration Button
+ */
 export class Registration {
     private _el: HTMLElement = null;
     private _item: IEventItem = null;
     private _onRefresh: () => void = null;
 
+    // Constructor
     constructor(el: HTMLElement, item: IEventItem, onRefresh: () => void) {
+        // Set the properties
         this._el = el;
         this._item = item;
         this._onRefresh = onRefresh;
+
+        // Render the component
         this.render();
     }
 
+    // Gets the user email
+    private getUserEmail(userFromWaitlist: number): PromiseLike<string> {
+        // Return a promise
+        return new Promise((resolve) => {
+            // See if the user is from the wait list
+            if (userFromWaitlist > 0) {
+                // Get the user
+                Web().getUserById(userFromWaitlist).execute(user => {
+                    // Resolve the promise
+                    resolve(user.Email);
+                });
+            } else {
+                // Resolve the promise
+                resolve(ContextInfo.userEmail);
+            }
+        });
+    }
+
+    // Renders the registration button
     private render() {
-        //see if the user if registered
+        // See if the user if registered
         let isRegistered = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results.indexOf(ContextInfo.userId) >= 0 : false;
-        //see if the course is full
+
+        // See if the course is full
         let numUsers: number = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results.length : 0;
         let capacity: number = this._item.Capacity ? (parseInt(this._item.Capacity) as number) : 0;
         let eventFull: boolean = numUsers == capacity ? true : false;
-        //check if user is on the waitlist
+
+        // Check if user is on the waitlist
         let userID = ContextInfo.userId;
         let userOnWaitList = this._item.WaitListedUsersId ? this._item.WaitListedUsersId.results.indexOf(ContextInfo.userId) >= 0 : false;
+
         // Render the buttons based on user/event status
         let btnText: string = "";
         let btnType: number = null;
@@ -38,29 +67,37 @@ export class Registration {
         let registerUserFromWaitlist: boolean = false;
         let userFromWaitlist: number = 0;
 
+        // See if the user is on the wait list
         if (userOnWaitList) {
             btnText = "Remove From Waitlist";
             btnType = Components.ButtonTypes.OutlineDanger;
             dlg = "Removing User From Waitlist";
             iconType = personXFill;
-        } else if (eventFull && !isRegistered) {
+        }
+        // Else, see if the event is full and the user is not registered
+        else if (eventFull && !isRegistered) {
             btnText = "Add To Waitlist";
             btnType = Components.ButtonTypes.OutlinePrimary;
             dlg = "Adding User To Waitlist";
             iconType = personPlusFill;
-        } else if (isRegistered) {
+        }
+        // Else, see if the user is registered
+        else if (isRegistered) {
             btnText = "Unregister";
             btnType = Components.ButtonTypes.OutlineDanger;
             dlg = "Unregistering the User";
             iconType = calendarMinusFill;
-        } else {
+        }
+        // Else, the event is open
+        else {
             btnText = "Register";
             btnType = Components.ButtonTypes.OutlinePrimary;
             dlg = "Registering the User";
             iconType = calendarPlusFill;
         }
 
-        let btn = Components.Tooltip({
+        // Render the tooltip
+        Components.Tooltip({
             el: this._el,
             content: btnText,
             btnProps: {
@@ -68,6 +105,9 @@ export class Registration {
                 iconSize: iconSize,
                 type: btnType,
                 onClick: (button) => {
+                    let waitListedUserIds = this._item.WaitListedUsersId ? this._item.WaitListedUsersId.results : [];
+                    let registeredUserIds = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results : [];
+
                     // See if the user is unregistered
                     let isUnregistered = btnText == "Unregister";
                     let userIsRegistering = btnText == "Register";
@@ -77,84 +117,85 @@ export class Registration {
                     LoadingDialog.setBody(dlg);
                     LoadingDialog.show();
 
-                    let waitListedUserIds = this._item.WaitListedUsersId ? this._item.WaitListedUsersId.results : [];
-                    let registeredUserIds = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results : [];
+                    // The metadata to be updated
+                    let updateFields = {};
 
-                    // User is being removed from the waitlist
+                    // See if the user is on the wait list
                     if (userOnWaitList) {
                         // Remove the user from the waitlist
                         let userIdx = waitListedUserIds.indexOf(userID);
                         waitListedUserIds.splice(userIdx, 1);
-                    } else if (eventFull && !isRegistered) {
-                        // Add the user to the waitlist
-                        waitListedUserIds.push(ContextInfo.userId);
-                    } else {
-                        //User is registered or unregistered
-                        // See if the user is unregistered
-                        if (isUnregistered) {
-                            // Get the user ids
-                            let userIdx = registeredUserIds.indexOf(
-                                ContextInfo.userId
-                            );
 
-                            // Remove the user
-                            registeredUserIds.splice(userIdx, 1);
-
-                            //if the event was full, add the next waitlist user
-                            if (eventFull && waitListedUserIds.length > 0) {
-                                userFromWaitlist = waitListedUserIds[0];
-                                let idx = waitListedUserIds.indexOf(userFromWaitlist);
-                                //remove from waitlist
-                                waitListedUserIds.splice(idx, 1);
-                                //add to registered users
-                                registeredUserIds.push(userFromWaitlist);
-                                registerUserFromWaitlist = true;
-                            }
-                        } else {
-                            // Add the user
-                            registeredUserIds.push(ContextInfo.userId);
-                        }
-                    }
-
-                    // Update the list item
-                    let updateFields = {};
-                    if ((eventFull || userOnWaitList) && !isRegistered) {
+                        // Set the metadata
                         updateFields = {
                             WaitListedUsersId: { results: waitListedUserIds },
                         };
-                    } else if (isUnregistered) {
-                        // Increase the open spots
-                        let openSpots: number = parseInt(this._item.OpenSpots) as number;
-                        if (registerUserFromWaitlist) {
-                            updateFields = {
-                                RegisteredUsersId: { results: registeredUserIds },
-                                WaitListedUsersId: { results: waitListedUserIds },
-                            };
-                        } else {
-                            updateFields = {
-                                OpenSpots: openSpots - 1,
-                                RegisteredUsersId: { results: registeredUserIds },
-                            };
-                        }
-                    } //unregistering
-                    else {
-                        let openSpots: number = parseInt(this._item.OpenSpots) as number;
-                        // decrease the open spots
+                    }
+                    // Else, see if the event is full and the user is not registered
+                    else if (eventFull && !isRegistered) {
+                        // Add the user to the waitlist
+                        waitListedUserIds.push(ContextInfo.userId);
+
+                        // Set the metadata
                         updateFields = {
-                            OpenSpots: openSpots + 1,
+                            WaitListedUsersId: { results: waitListedUserIds },
+                        };
+                    }
+                    // Else, see if the user is registered
+                    else if (isRegistered) {
+                        // Get the user ids
+                        let userIdx = registeredUserIds.indexOf(
+                            ContextInfo.userId
+                        );
+
+                        // Remove the user
+                        registeredUserIds.splice(userIdx, 1);
+
+                        //if the event was full, add the next waitlist user
+                        if (eventFull && waitListedUserIds.length > 0) {
+                            // Set the index
+                            userFromWaitlist = waitListedUserIds[0];
+                            let idx = waitListedUserIds.indexOf(userFromWaitlist);
+
+                            // Remove from waitlist
+                            waitListedUserIds.splice(idx, 1);
+
+                            // Add to registered users
+                            registeredUserIds.push(userFromWaitlist);
+                            registerUserFromWaitlist = true;
+                        }
+
+                        // Set the metadata
+                        updateFields = {
+                            OpenSpots: parseInt(this._item.OpenSpots) + 1,
+                            RegisteredUsersId: { results: registeredUserIds },
+                            WaitListedUsersId: { results: waitListedUserIds },
+                        };
+                    }
+                    // Else, the event is open
+                    else {
+                        // Add the user
+                        registeredUserIds.push(ContextInfo.userId);
+
+                        // Set the metadata
+                        updateFields = {
+                            OpenSpots: parseInt(this._item.OpenSpots) - 1,
                             RegisteredUsersId: { results: registeredUserIds },
                         };
                     }
+
+                    // Update the item
                     this._item.update(updateFields).execute(
                         // Success
                         () => {
-                            //Send email
-                            this.sendMail(userFromWaitlist, userIsRegistering);
-                            // Hide the dialog
-                            LoadingDialog.hide();
+                            // Send email
+                            this.sendMail(userFromWaitlist, userIsRegistering).then(() => {
+                                // Hide the dialog
+                                LoadingDialog.hide();
 
-                            // Refresh the dashboard
-                            this._onRefresh();
+                                // Refresh the dashboard
+                                this._onRefresh();
+                            });
                         },
                         // Error
                         () => {
@@ -166,31 +207,42 @@ export class Registration {
         });
     }
 
-    private sendMail(userFromWaitlist: number, userIsRegistering: boolean) {
-        let userEmail = userFromWaitlist > 0 ? Web().getUserById(userFromWaitlist).executeAndWait().Email : ContextInfo.userEmail;
-        let body = `${ContextInfo.userDisplayName}, you have successfully ${userFromWaitlist > 0 ? "been added from the waitlist" : "registered"} for the following event:
-        <p><strong>Title:</strong>${this._item.Title}</p></br>
-        <p><strong>Description:</strong>${this._item.Description}</p></br>
-        <p><strong>Start Date:</strong>${moment(this._item.StartDate).format("MM-DD-YYYY HH:mm")}</p></br>
-        <p><strong>End Date:</strong>${moment(this._item.EndDate).format("MM-DD-YYYY HH:mm")}</p></br>
-        <p><strong>Location:</strong>${this._item.Location}`;
-        let subject = `Successfully ${userFromWaitlist > 0 ? "added from the waitlist" : "registered"} for the event: ${this._item.Title}`;
-        if (
-            (userEmail && userIsRegistering) || userFromWaitlist > 0) {
-            Utility()
-                .sendEmail({
-                    To: [userEmail],
-                    Subject: subject,
-                    Body: body,
-                })
-                .execute(
-                    () => {
-                        console.log("Successfully sent email");
-                    },
-                    () => {
-                        console.error("Error sending email");
-                    }
-                );
-        }
+    // Sends an email
+    private sendMail(userFromWaitlist: number, userIsRegistering: boolean): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve) => {
+            // Get the user email
+            this.getUserEmail(userFromWaitlist).then(userEmail => {
+                // Set the body of the email
+                let body = `${ContextInfo.userDisplayName}, you have successfully ${userFromWaitlist > 0 ? "been added from the waitlist" : "registered"} for the following event:
+            <p><strong>Title:</strong>${this._item.Title}</p></br>
+            <p><strong>Description:</strong>${this._item.Description}</p></br>
+            <p><strong>Start Date:</strong>${moment(this._item.StartDate).format("MM-DD-YYYY HH:mm")}</p></br>
+            <p><strong>End Date:</strong>${moment(this._item.EndDate).format("MM-DD-YYYY HH:mm")}</p></br>
+            <p><strong>Location:</strong>${this._item.Location}`;
+
+                // Set the subject
+                let subject = `Successfully ${userFromWaitlist > 0 ? "added from the waitlist" : "registered"} for the event: ${this._item.Title}`;
+
+                // See if the user email exists and is registering for the event
+                if ((userEmail && userIsRegistering) || userFromWaitlist > 0) {
+                    // Send the email
+                    Utility().sendEmail({
+                        To: [userEmail],
+                        Subject: subject,
+                        Body: body,
+                    }).execute(
+                        () => {
+                            console.log("Successfully sent email");
+                            resolve();
+                        },
+                        () => {
+                            console.error("Error sending email");
+                            resolve();
+                        }
+                    );
+                }
+            });
+        });
     }
 }
