@@ -68,8 +68,21 @@ export class DataSource {
     static get StatusFilters(): Components.ICheckboxGroupItem[] { return this._statusFilters; }
 
     // User Login Name
-    private static _userLoginName = ContextInfo.isSPO ? "i:0#.f|membership|" + ContextInfo.userLoginName : ContextInfo.systemUserKey;
+    private static _userLoginName = null;
     static get UserLoginName(): string { return this._userLoginName; }
+    private static loadUserName(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Get the user information
+            Web().CurrentUser().execute(user => {
+                // Set the login name
+                this._userLoginName = user.LoginName;
+
+                // Resolve the request
+                resolve();
+            }, reject);
+        });
+    }
 
     // Loads the list data
     private static _eventRegPerms: Types.SP.BasePermissions;
@@ -80,51 +93,53 @@ export class DataSource {
             // Declare a common web instance
             let web = Web();
             this.loadConfiguration().then(() => {
-                this.GetAdminStatus().then(() => {
-                    // Load the data
-                    if (this._isAdmin) {
-                        List(Strings.Lists.Events).Items().query({
-                            Expand: ["AttachmentFiles"],
-                            GetAllItems: true,
-                            OrderBy: ["StartDate asc"],
-                            Top: 5000
-                        }).execute(
-                            // Success
-                            items => {
-                                // Resolve the request
-                                this._events = items.results as any;
-                            },
-                            // Error
-                            () => { reject(); }
-                        );
-                    }
-                    else {
-                        let today = moment().toISOString();
-                        List(Strings.Lists.Events).Items().query({
-                            Expand: ["AttachmentFiles"],
-                            Filter: `StartDate ge '${today}'`,
-                            GetAllItems: true,
-                            OrderBy: ["StartDate asc"],
-                            Top: 5000
-                        }).execute(
-                            items => {
-                                // Resolve the request
-                                this._events = items.results as any;
-                            },
-                            () => { reject(); }
-                        );
-                    }
-                    // Load the user permissions for the Events list
-                    web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
-                        // Save the user permissions
-                        this._eventRegPerms = perm.GetUserEffectivePermissions;
-                    });
+                this.loadUserName().then(() => {
+                    this.GetAdminStatus().then(() => {
+                        // Load the data
+                        if (this._isAdmin) {
+                            web.Lists(Strings.Lists.Events).Items().query({
+                                Expand: ["AttachmentFiles"],
+                                GetAllItems: true,
+                                OrderBy: ["StartDate asc"],
+                                Top: 5000
+                            }).execute(
+                                // Success
+                                items => {
+                                    // Resolve the request
+                                    this._events = items.results as any;
+                                },
+                                // Error
+                                () => { reject(); }
+                            );
+                        }
+                        else {
+                            let today = moment().toISOString();
+                            web.Lists(Strings.Lists.Events).Items().query({
+                                Expand: ["AttachmentFiles"],
+                                Filter: `StartDate ge '${today}'`,
+                                GetAllItems: true,
+                                OrderBy: ["StartDate asc"],
+                                Top: 5000
+                            }).execute(
+                                items => {
+                                    // Resolve the request
+                                    this._events = items.results as any;
+                                },
+                                () => { reject(); }
+                            );
+                        }
+                        // Load the user permissions for the Events list
+                        web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
+                            // Save the user permissions
+                            this._eventRegPerms = perm.GetUserEffectivePermissions;
+                        });
 
-                    // Once both queries are complete, return promise
-                    web.done(() => {
-                        // Resolve the request
-                        resolve(this._events);
-                    });
+                        // Once both queries are complete, return promise
+                        web.done(() => {
+                            // Resolve the request
+                            resolve(this._events);
+                        });
+                    }, reject);
                 }, reject);
             }, reject);
         });

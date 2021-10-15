@@ -241,6 +241,9 @@ export class Registration {
                             resolve();
                         }
                     );
+                } else {
+                    // Resolve the request
+                    resolve();
                 }
             });
         });
