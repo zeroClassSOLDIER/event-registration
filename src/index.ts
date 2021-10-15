@@ -24,7 +24,7 @@ const GlobalVariable = {
                 // Create the application
                 new App(el);
             },
-            // Error\
+            // Error
             () => {
                 // See if an install is required
                 InstallationRequired.requiresInstall(Configuration).then(installFl => {

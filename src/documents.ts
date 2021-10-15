@@ -98,6 +98,9 @@ export class DocumentsView {
                     onClick: () => {
                         // Close the dialog
                         Modal.hide();
+
+                        // Show the slider
+                        CanvasForm.show();
                     }
                 }
             ]

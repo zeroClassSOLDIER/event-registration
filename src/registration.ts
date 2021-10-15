@@ -211,6 +211,9 @@ export class Registration {
     private sendMail(userFromWaitlist: number, userIsRegistering: boolean): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
+            // Do nothing if the user is unregistering from the event
+            if (!userIsRegistering) { resolve(); return; }
+
             // Get the user email
             this.getUserEmail(userFromWaitlist).then(userEmail => {
                 // Set the body of the email
@@ -225,7 +228,7 @@ export class Registration {
                 let subject = `Successfully ${userFromWaitlist > 0 ? "added from the waitlist" : "registered"} for the event: ${this._item.Title}`;
 
                 // See if the user email exists and is registering for the event
-                if ((userEmail && userIsRegistering) || userFromWaitlist > 0) {
+                if (userEmail || userFromWaitlist > 0) {
                     // Send the email
                     Utility().sendEmail({
                         To: [userEmail],

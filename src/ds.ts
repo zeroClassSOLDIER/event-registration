@@ -38,10 +38,15 @@ export class DataSource {
     private static _events: IEventItem[] = null;
     static get Events(): IEventItem[] { return this._events; }
 
+    // Event Registration Permissions
+    private static _eventRegPerms: Types.SP.BasePermissions;
+    static get EventRegPerms(): Types.SP.BasePermissions { return this._eventRegPerms; };
+
     // Check if user is an admin
     private static _isAdmin: boolean = false;
     static get IsAdmin(): boolean { return this._isAdmin; }
-    //Set Admin status
+
+    // Set Admin status
     private static GetAdminStatus(): PromiseLike<void> {
         return new Promise((resolve) => {
             if (this._cfg.adminGroupName) {
@@ -85,8 +90,6 @@ export class DataSource {
     }
 
     // Loads the list data
-    private static _eventRegPerms: Types.SP.BasePermissions;
-    static get EventRegPerms(): Types.SP.BasePermissions { return this._eventRegPerms; };
     static init(): PromiseLike<Array<IEventItem>> {
         // Return a promise
         return new Promise((resolve, reject) => {
