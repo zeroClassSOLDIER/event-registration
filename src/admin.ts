@@ -1,4 +1,4 @@
-import { ItemForm, LoadingDialog, Modal } from "dattatable";
+import { InstallationRequired, ItemForm, LoadingDialog, Modal } from "dattatable";
 import { Components, Web } from "gd-sprest-bs";
 import { calendarPlus } from "gd-sprest-bs/build/icons/svgs/calendarPlus";
 import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs";
@@ -114,6 +114,17 @@ export class Admin {
             },
           },
         ],
+      });
+
+      // Add an option to manage the application
+      navItems.push({
+        className: "btn-primary",
+        text: "MANAGE APP",
+        isButton: true,
+        onClick: () => {
+          // Show the installation dialog
+          InstallationRequired.showDialog();
+        }
       });
     }
 
