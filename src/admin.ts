@@ -99,18 +99,16 @@ export class Admin {
         items: [
           {
             text: "Managers",
-            href: DataSource.GetManagersUrl(),
             onClick: () => {
               // Show the manager's group
-              window.open(DataSource.GetManagersUrl(), "_blank");
+              window.open(DataSource.ManagersUrl, "_blank");
             },
           },
           {
             text: "Members",
-            href: DataSource.GetManagersUrl(),
             onClick: () => {
               // Show the member's group
-              window.open(DataSource.GetMembersUrl(), "_blank");
+              window.open(DataSource.MembersUrl, "_blank");
             },
           },
         ],
@@ -253,21 +251,27 @@ export class Admin {
     }
 
     // Get the POCs
-    let pocs = eventItem["POCId"] ? eventItem["POCId"].results : null || [];
     let pocString = "";
+    let pocs = ((eventItem.POC ? eventItem.POC.results : null) || []).sort((a, b) => {
+      if (a.Title < b.Title) { return -1; }
+      if (a.Title > b.Title) { return 1; }
+      return 0;
+    });
     for (let i = 0; i < pocs.length; i++) {
-      let poc = Web().getUserById(pocs[i]).executeAndWait().Title;
       if (i > 0) pocString += "<br/>";
-      pocString += poc;
+      pocString += pocs[i].Title;
     }
 
     // Get the list of registered usernames
-    let usersRegistered = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : null || [];
+    let usersRegistered = ((eventItem.RegisteredUsers ? eventItem.RegisteredUsers.results : null) || []).sort((a, b) => {
+      if (a.Title < b.Title) { return -1; }
+      if (a.Title > b.Title) { return 1; }
+      return 0;
+    });
     let usersTable = `<tr><td colspan='4'>No registrations were found for the event</td></tr>`;
     for (let x = 0; x < usersRegistered.length; x++) {
-      let userTitle = Web().getUserById(usersRegistered[x]).executeAndWait().Title;
       if (x == 0) usersTable = "";
-      usersTable += `<tr><td>${x + 1}</td><td>${userTitle}</td><td></td><td></td></tr>`;
+      usersTable += `<tr><td>${x + 1}</td><td>${usersRegistered[x].Title}</td><td></td><td></td></tr>`;
     }
 
     // Create the Jumbotron text
