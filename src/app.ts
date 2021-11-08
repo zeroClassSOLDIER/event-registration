@@ -199,7 +199,7 @@ export class App {
           },
           {
             // 1 - Title
-            name: "Title",
+            name: "",
             title: "Title",
             onRenderCell: (el, column, item: IEventItem) => {
               let currDate = moment();
@@ -273,7 +273,7 @@ export class App {
           },
           {
             // 6 - Documents
-            name: "Documents",
+            name: "",
             title: "Documents",
             onRenderCell: (el, column, item: IEventItem) => {
               // Render the document column
@@ -311,7 +311,7 @@ export class App {
           },
           {
             // 9 - POC
-            name: "POC",
+            name: "",
             title: "POC",
             onRenderCell: (el, column, item: IEventItem) => {
               let pocs = ((item["POC"] ? item["POC"].results : null) || []).sort((a, b) => {
@@ -335,7 +335,7 @@ export class App {
           },
           {
             // 11 - Administration dropdown
-            name: "Manage Event",
+            name: "",
             title: "Manage Event",
             onRenderCell: (el, column, item: IEventItem) => {
               admin.renderEventMenu(el, item, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
