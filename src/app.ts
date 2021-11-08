@@ -127,7 +127,7 @@ export class App {
                 return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
               }
             },
-            this._isAdmin ? { targets: [10, 12], visible: false } : { targets: [11], visible: false },
+            this._isAdmin ? { targets: [12], visible: false } : { targets: [11], visible: false },
           ],
           // Add some classes to the dataTable elements
           drawCallback: function () {
