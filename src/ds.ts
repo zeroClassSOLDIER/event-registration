@@ -135,6 +135,9 @@ export class DataSource {
                         web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
                             // Save the user permissions
                             this._eventRegPerms = perm.GetUserEffectivePermissions;
+                        }, () => {
+                            // Unable to determine the user permissions
+                            this._eventRegPerms = {};
                         });
 
                         // Once both queries are complete, return promise
@@ -186,7 +189,7 @@ export class DataSource {
     static GetManagersUrl() {
         // Return a promise
         let ownersGroup = DataSource.Configuration.adminGroupName;
-        let groupID = ownersGroup ? Web().SiteGroups().getByName(ownersGroup).executeAndWait().Id : Web().AssociatedMemberGroup().executeAndWait().Id;
+        let groupID = ownersGroup ? Web().SiteGroups().getByName(ownersGroup).executeAndWait().Id : Web().AssociatedOwnerGroup().executeAndWait().Id;
         return ContextInfo.webServerRelativeUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + groupID;
     }
 
