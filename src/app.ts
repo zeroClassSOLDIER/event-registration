@@ -314,11 +314,14 @@ export class App {
             name: "POC",
             title: "POC",
             onRenderCell: (el, column, item: IEventItem) => {
-              let pocs = item["POCId"] ? item["POCId"].results : null || [];
+              let pocs = ((item["POC"] ? item["POC"].results : null) || []).sort((a, b) => {
+                if (a.Title < b.Title) { return -1; }
+                if (a.Title > b.Title) { return 1; }
+                return 0;
+              });
               for (let i = 0; i < pocs.length; i++) {
-                let poc = Web().getUserById(pocs[i]).executeAndWait().Title;
                 if (i > 0) el.innerHTML += "<br/>";
-                el.innerHTML += poc;
+                el.innerHTML += pocs[i].Title;
               }
             },
           },

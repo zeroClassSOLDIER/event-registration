@@ -10,7 +10,12 @@ export interface IEventItem extends Types.SP.ListItemOData {
     Location: string;
     OpenSpots: string;
     Capacity: string;
-    POC: { results: string[] };
+    POC: {
+        results: [{
+            Id: number;
+            Title: string;
+        }]
+    };
     RegisteredUsers: { results: any[] };
     RegisteredUsersId: { results: number[] };
     WaitListedUsers: { results: any[] };
@@ -101,10 +106,15 @@ export class DataSource {
                         // Load the data
                         if (this._isAdmin) {
                             web.Lists(Strings.Lists.Events).Items().query({
-                                Expand: ["AttachmentFiles"],
+                                Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
                                 GetAllItems: true,
                                 OrderBy: ["StartDate asc"],
-                                Top: 5000
+                                Top: 5000,
+                                Select: [
+                                    "*", "POC/Id", "POC/Title",
+                                    "RegisteredUsers/Id", "RegisteredUsers/Title",
+                                    "WaitListedUsers/Id", "WaitListedUsers/Title"
+                                ]
                             }).execute(
                                 // Success
                                 items => {
@@ -118,11 +128,16 @@ export class DataSource {
                         else {
                             let today = moment().toISOString();
                             web.Lists(Strings.Lists.Events).Items().query({
-                                Expand: ["AttachmentFiles"],
+                                Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
                                 Filter: `StartDate ge '${today}'`,
                                 GetAllItems: true,
                                 OrderBy: ["StartDate asc"],
-                                Top: 5000
+                                Top: 5000,
+                                Select: [
+                                    "*", "POC/Id", "POC/Title",
+                                    "RegisteredUsers/Id", "RegisteredUsers/Title",
+                                    "WaitListedUsers/Id", "WaitListedUsers/Title"
+                                ]
                             }).execute(
                                 items => {
                                     // Resolve the request
@@ -185,19 +200,31 @@ export class DataSource {
         });
     }
 
-    // Get the Managers group
-    static GetManagersUrl() {
-        // Return a promise
-        let ownersGroup = DataSource.Configuration.adminGroupName;
-        let groupID = ownersGroup ? Web().SiteGroups().getByName(ownersGroup).executeAndWait().Id : Web().AssociatedOwnerGroup().executeAndWait().Id;
-        return ContextInfo.webServerRelativeUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + groupID;
-    }
+    // Security Groups
+    private static _managerId: number = null;
+    static get ManagersUrl(): string { return ContextInfo.webServerRelativeUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + this._managerId; }
+    private static _memberId: number = null;
+    static get MembersUrl(): string { return ContextInfo.webServerRelativeUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + this._memberId; }
+    static loadSecurityGroupUrls(): PromiseLike<void> {
+        return new Promise((resolve) => {
+            let web = Web();
 
-    // Get the Managers group
-    static GetMembersUrl() {
-        // Return a promise
-        let membersGroup = DataSource.Configuration.membersGroupName;
-        let groupID = membersGroup ? Web().SiteGroups().getByName(membersGroup).executeAndWait().Id : Web().AssociatedMemberGroup().executeAndWait().Id;
-        return ContextInfo.webServerRelativeUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + groupID;
+            // Load the owner's group
+            let ownersGroup = DataSource.Configuration.adminGroupName;
+            (ownersGroup ? Web().SiteGroups().getByName(ownersGroup) : Web().AssociatedOwnerGroup()).execute(group => {
+                // Set the id
+                this._managerId = group.Id;
+            });
+
+            // Load the member's group
+            let membersGroup = DataSource.Configuration.membersGroupName;
+            (membersGroup ? Web().SiteGroups().getByName(membersGroup) : Web().AssociatedMemberGroup()).execute(group => {
+                // Set the id
+                this._memberId = group.Id;
+            });
+
+            // Wait for the requests to complete
+            web.done(() => { resolve(); });
+        });
     }
 }
