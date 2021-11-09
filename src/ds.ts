@@ -1,4 +1,4 @@
-import { Components, ContextInfo, List, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Types, Web } from "gd-sprest-bs";
 import * as moment from "moment";
 import Strings from "./strings";
 
@@ -42,6 +42,70 @@ export class DataSource {
     // Events
     private static _events: IEventItem[] = null;
     static get Events(): IEventItem[] { return this._events; }
+    static loadEvents(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            let web = Web();
+
+            // Load the data
+            if (this._isAdmin) {
+                web.Lists(Strings.Lists.Events).Items().query({
+                    Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
+                    GetAllItems: true,
+                    OrderBy: ["StartDate asc"],
+                    Top: 5000,
+                    Select: [
+                        "*", "POC/Id", "POC/Title",
+                        "RegisteredUsers/Id", "RegisteredUsers/Title",
+                        "WaitListedUsers/Id", "WaitListedUsers/Title"
+                    ]
+                }).execute(
+                    // Success
+                    items => {
+                        // Resolve the request
+                        this._events = items.results as any;
+                    },
+                    // Error
+                    () => { reject(); }
+                );
+            }
+            else {
+                let today = moment().toISOString();
+                web.Lists(Strings.Lists.Events).Items().query({
+                    Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
+                    Filter: `StartDate ge '${today}'`,
+                    GetAllItems: true,
+                    OrderBy: ["StartDate asc"],
+                    Top: 5000,
+                    Select: [
+                        "*", "POC/Id", "POC/Title",
+                        "RegisteredUsers/Id", "RegisteredUsers/Title",
+                        "WaitListedUsers/Id", "WaitListedUsers/Title"
+                    ]
+                }).execute(
+                    items => {
+                        // Resolve the request
+                        this._events = items.results as any;
+                    },
+                    () => { reject(); }
+                );
+            }
+            // Load the user permissions for the Events list
+            web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
+                // Save the user permissions
+                this._eventRegPerms = perm.GetUserEffectivePermissions;
+            }, () => {
+                // Unable to determine the user permissions
+                this._eventRegPerms = {};
+            });
+
+            // Once both queries are complete, return promise
+            web.done(() => {
+                // Resolve the request
+                resolve();
+            });
+        });
+    }
 
     // Event Registration Permissions
     private static _eventRegPerms: Types.SP.BasePermissions;
@@ -95,71 +159,23 @@ export class DataSource {
     }
 
     // Loads the list data
-    static init(): PromiseLike<Array<IEventItem>> {
+    static init(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            // Declare a common web instance
-            let web = Web();
+            // Load the optional configuration file
             this.loadConfiguration().then(() => {
+                // Load the user's login name
                 this.loadUserName().then(() => {
-                    this.GetAdminStatus().then(() => {
-                        // Load the data
-                        if (this._isAdmin) {
-                            web.Lists(Strings.Lists.Events).Items().query({
-                                Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
-                                GetAllItems: true,
-                                OrderBy: ["StartDate asc"],
-                                Top: 5000,
-                                Select: [
-                                    "*", "POC/Id", "POC/Title",
-                                    "RegisteredUsers/Id", "RegisteredUsers/Title",
-                                    "WaitListedUsers/Id", "WaitListedUsers/Title"
-                                ]
-                            }).execute(
-                                // Success
-                                items => {
-                                    // Resolve the request
-                                    this._events = items.results as any;
-                                },
-                                // Error
-                                () => { reject(); }
-                            );
-                        }
-                        else {
-                            let today = moment().toISOString();
-                            web.Lists(Strings.Lists.Events).Items().query({
-                                Expand: ["AttachmentFiles", "POC", "RegisteredUsers", "WaitListedUsers"],
-                                Filter: `StartDate ge '${today}'`,
-                                GetAllItems: true,
-                                OrderBy: ["StartDate asc"],
-                                Top: 5000,
-                                Select: [
-                                    "*", "POC/Id", "POC/Title",
-                                    "RegisteredUsers/Id", "RegisteredUsers/Title",
-                                    "WaitListedUsers/Id", "WaitListedUsers/Title"
-                                ]
-                            }).execute(
-                                items => {
-                                    // Resolve the request
-                                    this._events = items.results as any;
-                                },
-                                () => { reject(); }
-                            );
-                        }
-                        // Load the user permissions for the Events list
-                        web.Lists(Strings.Lists.Events).getUserEffectivePermissions(this._userLoginName).execute(perm => {
-                            // Save the user permissions
-                            this._eventRegPerms = perm.GetUserEffectivePermissions;
-                        }, () => {
-                            // Unable to determine the user permissions
-                            this._eventRegPerms = {};
-                        });
-
-                        // Once both queries are complete, return promise
-                        web.done(() => {
-                            // Resolve the request
-                            resolve(this._events);
-                        });
+                    // Load the security group urls
+                    this.loadSecurityGroupUrls().then(() => {
+                        // Determine if the user is an admin
+                        this.GetAdminStatus().then(() => {
+                            // Load the events
+                            this.loadEvents().then(() => {
+                                // Resolve the request
+                                resolve();
+                            }, reject);
+                        }, reject);
                     }, reject);
                 }, reject);
             }, reject);
