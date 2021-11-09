@@ -284,19 +284,31 @@ export class App {
             name: "",
             title: "Open Spots",
             onRenderCell: (el, column, item: IEventItem) => {
-              let numUsers: number = item.RegisteredUsersId
-                ? item.RegisteredUsersId.results.length
-                : 0;
               let capacity: number = item.Capacity
                 ? (parseInt(item.Capacity) as number)
                 : 0;
+              let numUsers: number = item.RegisteredUsersId
+                ? item.RegisteredUsersId.results.length
+                : 0;
+              let numWaitlisted: number = item.WaitListedUsersId
+                ? item.WaitListedUsersId.results.length
+                : 0;
               let eventFull: boolean = capacity == numUsers ? true : false;
               if (eventFull) {
-                let statusBadge = Components.Badge({
+                // Render the badges
+                Components.Badge({
                   el: el,
                   type: Components.BadgeTypes.Danger,
                   content: "Full",
                   className: "w-50",
+                });
+                let breakLine = document.createElement("br");
+                el.appendChild(breakLine);
+                Components.Badge({
+                  el: el,
+                  type: Components.BadgeTypes.Primary,
+                  content: numWaitlisted + " Waitlisted",
+                  className: "w-100",
                 });
               } else {
                 el.innerHTML = (capacity - numUsers).toString();
