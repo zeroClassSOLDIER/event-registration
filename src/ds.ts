@@ -12,6 +12,7 @@ export interface IEventItem extends Types.SP.ListItemOData {
     Capacity: string;
     POC: {
         results: [{
+            EMail: string;
             Id: number;
             Title: string;
         }]
@@ -55,9 +56,9 @@ export class DataSource {
                     OrderBy: ["StartDate asc"],
                     Top: 5000,
                     Select: [
-                        "*", "POC/Id", "POC/Title",
-                        "RegisteredUsers/Id", "RegisteredUsers/Title",
-                        "WaitListedUsers/Id", "WaitListedUsers/Title"
+                        "*", "POC/Id", "POC/Title", "POC/EMail",
+                        "RegisteredUsers/Id", "RegisteredUsers/Title", "RegisteredUsers/EMail",
+                        "WaitListedUsers/Id", "WaitListedUsers/Title", "WaitListedUsers/EMail"
                     ]
                 }).execute(
                     // Success
@@ -79,8 +80,8 @@ export class DataSource {
                     Top: 5000,
                     Select: [
                         "*", "POC/Id", "POC/Title",
-                        "RegisteredUsers/Id", "RegisteredUsers/Title",
-                        "WaitListedUsers/Id", "WaitListedUsers/Title"
+                        "RegisteredUsers/Id", "RegisteredUsers/Title", "RegisteredUsers/EMail",
+                        "WaitListedUsers/Id", "WaitListedUsers/Title", "WaitListedUsers/EMail"
                     ]
                 }).execute(
                     items => {
