@@ -199,21 +199,20 @@ export class App {
           },
           {
             // 1 - Title
-            name: "",
+            name: "Title",
             title: "Title",
             onRenderCell: (el, column, item: IEventItem) => {
+              // Determine the # of hours until the event starts
               let currDate = moment();
               let startDate = moment(item["StartDate"]);
               let resetHour = '12:00:00 am';
               let time = moment(resetHour, 'HH:mm:ss a');
-
               let currReset = currDate.set({ hour: time.get('hour'), minute: time.get('minute') });
               let startReset = startDate.set({ hour: time.get('hour'), minute: time.get('minute') });
-
               let dateDiff = moment(startReset, "DD/MM/YYYY").diff(moment(currReset, "DD/MM/YYYY"), "hours");
-
               console.log("dateDiff: " + moment(currReset).format("DD MMM YYYY hh:mm a") + " - " + moment(startReset).format("DD MMM YYYY hh:mm a") + " = " + dateDiff);
 
+              // See if the event starts w/in 24 hours
               if (dateDiff <= 24 && dateDiff > 0) {
                 // Add a break after title
                 let elBreak = document.createElement("br");
