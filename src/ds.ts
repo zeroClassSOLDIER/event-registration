@@ -39,8 +39,11 @@ export interface IEventItem extends Types.SP.ListItemOData {
 
 // Configuration
 export interface IConfiguration {
-    adminGroupName: string;
-    membersGroupName: string;
+    adminGroupName?: string;
+    displayHeader?: boolean;
+    headerImage?: string;
+    headerTitle?: string;
+    membersGroupName?: string;
 }
 /**
  * Data Source

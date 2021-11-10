@@ -67,9 +67,19 @@ export class App {
     // Create the dashboard
     this._dashboard = new Dashboard({
       el: this._el,
-      hideHeader: true,
       useModal: true,
       hideFilter: !this._isAdmin ? true : false,
+      hideHeader: DataSource.Configuration.displayHeader,
+      header: {
+        title: DataSource.Configuration.headerTitle || Strings.ProjectName,
+        onRendered: (el) => {
+          // See if the image url is defined
+          if (DataSource.Configuration.headerImage) {
+            // Update the header
+            el.style.backgroundImage = "url(" + DataSource.Configuration.headerImage + ")";
+          }
+        }
+      },
       filters: {
         items: [
           {

@@ -1,4 +1,7 @@
 {
     "adminGroupName": "",
+    "headerImage": "",
+    "headerTitle": "",
+    "hideHeader": false,
     "membersGroupName": ""
 }

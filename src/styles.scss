@@ -31,6 +31,15 @@
     font-weight: bold;
 }
 
+.bs #header {
+    background-color: #000;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    color: #fff;
+    margin-bottom: 0px;
+}
+
 .bs .navbar > .container, .bs .navbar > .container-fluid, .bs .navbar > .container-sm, .bs .navbar > .container-md, .bs .navbar > .container-lg, .bs .navbar > .container-xl, .bs .navbar > .container-xxl {
     display: flex;
     flex-wrap: inherit;
