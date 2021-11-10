@@ -8,6 +8,102 @@ import { DataSource, IEventItem } from "./ds";
 import { Registration } from "./registration";
 
 export class Admin {
+  // Cancels an event
+  private cancelEvent(eventItem: IEventItem, onRefresh: () => void) {
+    // Set the modal header
+    Modal.setHeader("Cancel Event");
+
+    // Create the form
+    let form = Components.Form({
+      controls: [
+        {
+          type: Components.FormControlTypes.Readonly,
+          value: "Are you sure you want to cancel the event?"
+        },
+        {
+          name: "SendEmail",
+          label: "Send Email?",
+          type: Components.FormControlTypes.Switch,
+          value: true
+        }
+      ]
+    });
+
+    // Set the modal body
+    Modal.setBody(form.el);
+
+    // Set the modal footer
+    Modal.setFooter(Components.ButtonGroup({
+      buttons: [
+        {
+          text: "Confirm",
+          type: Components.ButtonTypes.Danger,
+          onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              let sendEmail = form.getValues()["SendEmail"];
+
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Cancelling Event");
+              LoadingDialog.setBody("This dialog will close after the item is updated.");
+              LoadingDialog.show();
+
+              // Delete the item
+              eventItem.delete().execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // See if we are sending an email
+                if (sendEmail) {
+                  // Parse the pocs
+                  let pocs = [];
+                  for (let i = 0; i < eventItem.POC.results.length; i++) {
+                    // Append the user email
+                    pocs.push(eventItem.POC.results[i].EMail);
+                  }
+
+                  // Parse the registered users
+                  let users = [];
+                  for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
+                    // Append the user email
+                    users.push(eventItem.RegisteredUsers.results[i].EMail);
+                  }
+
+                  // Send the email
+                  Utility().sendEmail({
+                    To: users,
+                    CC: pocs,
+                    Subject: "Event '" + eventItem.Title + "' Cancelled",
+                    Body: '<p>Event Members,</p><p>The event has been cancelled.</p><p>r/,</p><p>Event Registration Admins</p>'
+                  }).execute(() => {
+                    // Close the loading dialog
+                    LoadingDialog.hide();
+                  });
+                } else {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                }
+              });
+            }
+          }
+        },
+        {
+          text: "Cancel",
+          type: Components.ButtonTypes.Secondary,
+          onClick: () => {
+            ItemForm.close();
+          }
+        }
+      ]
+    }).el);
+
+    // Display the modal
+    Modal.show();
+  }
+
   // Deletes an event
   private deleteEvent(eventItem: IEventItem, onRefresh: () => void) {
     // Clear the modal
@@ -157,97 +253,6 @@ export class Admin {
     Modal.setScrollable(true);
   }
 
-  // Sends an email to the event members
-  private sendEmail(eventItem: IEventItem) {
-    // Set the modal header
-    Modal.setHeader("Send Email")
-
-    // Create the form
-    let form = Components.Form({
-      controls: [
-        {
-          name: "EmailSubject",
-          label: "Email Subject",
-          required: true,
-          errorMessage: "A subject is required to send an email.",
-          type: Components.FormControlTypes.TextField,
-          value: eventItem.Title
-        },
-        {
-          name: "EmailBody",
-          label: "Email Body",
-          required: true,
-          errorMessage: "Content is required to send an email.",
-          rows: 10,
-          type: Components.FormControlTypes.TextArea,
-          value: ""
-        } as Components.IFormControlPropsTextField
-      ]
-    });
-
-    // Set the modal body
-    Modal.setBody(form.el);
-
-    // Set the modal footer
-    Modal.setFooter(Components.ButtonGroup({
-      buttons: [
-        {
-          text: "Send",
-          type: Components.ButtonTypes.Primary,
-          onClick: () => {
-            // Ensure the form is valid
-            if (form.isValid()) {
-              let values = form.getValues();
-
-              // Close the modal
-              Modal.hide();
-
-              // Show a loading dialog
-              LoadingDialog.setHeader("Sending Email");
-              LoadingDialog.setBody("This dialog will close after the email is sent.");
-              LoadingDialog.show();
-
-              // Parse the pocs
-              let pocs = [];
-              for (let i = 0; i < eventItem.POC.results.length; i++) {
-                // Append the user email
-                pocs.push(eventItem.POC.results[i].EMail);
-              }
-
-              // Parse the registered users
-              let users = [];
-              for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
-                // Append the user email
-                users.push(eventItem.RegisteredUsers.results[i].EMail);
-              }
-
-              // Send the email
-              Utility().sendEmail({
-                To: users,
-                CC: pocs,
-                Body: values["EmailBody"].replace(/\n/g, "<br />"),
-                Subject: values["EmailSubject"]
-              }).execute(() => {
-                // Close the loading dialog
-                LoadingDialog.hide();
-              });
-            }
-          }
-        },
-        {
-          text: "Cancel",
-          type: Components.ButtonTypes.Secondary,
-          onClick: () => {
-            ItemForm.close();
-          }
-        }
-      ]
-    }).el);
-
-    // Display the modal
-    Modal.show();
-  }
-
   // Registers a user
   private registerUser(eventItem: IEventItem, onRefresh: () => void) {
     // Set the modal header
@@ -375,6 +380,12 @@ export class Admin {
       className: "eventRegAdmin",
       items: [
         {
+          text: " Cancel",
+          onClick: (button) => {
+            this.cancelEvent(eventItem, onRefresh);
+          },
+        },
+        {
           isDisabled: !canEditEvent,
           text: " Edit",
           onClick: (button) => {
@@ -436,6 +447,97 @@ export class Admin {
     }
   }
 
+  // Sends an email to the event members
+  private sendEmail(eventItem: IEventItem) {
+    // Set the modal header
+    Modal.setHeader("Send Email")
+
+    // Create the form
+    let form = Components.Form({
+      controls: [
+        {
+          name: "EmailSubject",
+          label: "Email Subject",
+          required: true,
+          errorMessage: "A subject is required to send an email.",
+          type: Components.FormControlTypes.TextField,
+          value: eventItem.Title
+        },
+        {
+          name: "EmailBody",
+          label: "Email Body",
+          required: true,
+          errorMessage: "Content is required to send an email.",
+          rows: 10,
+          type: Components.FormControlTypes.TextArea,
+          value: ""
+        } as Components.IFormControlPropsTextField
+      ]
+    });
+
+    // Set the modal body
+    Modal.setBody(form.el);
+
+    // Set the modal footer
+    Modal.setFooter(Components.ButtonGroup({
+      buttons: [
+        {
+          text: "Send",
+          type: Components.ButtonTypes.Primary,
+          onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              let values = form.getValues();
+
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Sending Email");
+              LoadingDialog.setBody("This dialog will close after the email is sent.");
+              LoadingDialog.show();
+
+              // Parse the pocs
+              let pocs = [];
+              for (let i = 0; i < eventItem.POC.results.length; i++) {
+                // Append the user email
+                pocs.push(eventItem.POC.results[i].EMail);
+              }
+
+              // Parse the registered users
+              let users = [];
+              for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
+                // Append the user email
+                users.push(eventItem.RegisteredUsers.results[i].EMail);
+              }
+
+              // Send the email
+              Utility().sendEmail({
+                To: users,
+                CC: pocs,
+                Body: values["EmailBody"].replace(/\n/g, "<br />"),
+                Subject: values["EmailSubject"]
+              }).execute(() => {
+                // Close the loading dialog
+                LoadingDialog.hide();
+              });
+            }
+          }
+        },
+        {
+          text: "Cancel",
+          type: Components.ButtonTypes.Secondary,
+          onClick: () => {
+            ItemForm.close();
+          }
+        }
+      ]
+    }).el);
+
+    // Display the modal
+    Modal.show();
+  }
+
   // Unregisters a user
   private unregisterUser(eventItem: IEventItem, onRefresh: () => void) {
     // Set the modal header
@@ -476,7 +578,7 @@ export class Admin {
       buttons: [
         {
           text: "Unregister",
-          type: Components.ButtonTypes.Primary,
+          type: Components.ButtonTypes.Danger,
           onClick: () => {
             // Ensure the form is valid
             if (form.isValid()) {
