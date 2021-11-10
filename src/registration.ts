@@ -44,6 +44,12 @@ export class Registration {
         });
     }
 
+    // Determines if an event is empty
+    static isEmpty(event: IEventItem) {
+        // Determine if the course is empty
+        return event.RegisteredUsersId == null;
+    }
+
     // Determines if an event is full
     static isFull(event: IEventItem) {
         // Determine if the course is full

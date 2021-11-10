@@ -358,6 +358,7 @@ export class Admin {
         },
         {
           text: " Manage Waitlist",
+          isDisabled: eventItem.WaitListedUsersId == null,
           onClick: (button) => {
             // TODO
           },
@@ -371,14 +372,14 @@ export class Admin {
         },
         {
           text: " Send Email",
-          isDisabled: eventItem.POC == null,
+          isDisabled: Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.sendEmail(eventItem);
           },
         },
         {
           text: " Unregister User",
-          isDisabled: eventItem.POC == null,
+          isDisabled: Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.unregisterUser(eventItem, onRefresh);
           },
