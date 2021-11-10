@@ -3,6 +3,7 @@ import { Components, Utility } from "gd-sprest-bs";
 import { calendarPlus } from "gd-sprest-bs/build/icons/svgs/calendarPlus";
 import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs";
 import * as moment from "moment";
+import { Configuration } from "./cfg";
 import { DataSource, IEventItem } from "./ds";
 import { Registration } from "./registration";
 
@@ -121,8 +122,19 @@ export class Admin {
         text: "MANAGE APP",
         isButton: true,
         onClick: () => {
-          // Show the installation dialog
-          InstallationRequired.showDialog();
+          // Display a loading dialog
+          LoadingDialog.setHeader("Analyzing the Assets");
+          LoadingDialog.setBody("Checking the SharePoint assets.");
+          LoadingDialog.show();
+
+          // Determine if an install is required
+          InstallationRequired.requiresInstall(Configuration).then(() => {
+            // Hide the dialog
+            LoadingDialog.hide();
+
+            // Show the installation dialog
+            InstallationRequired.showDialog();
+          });
         }
       });
     }
