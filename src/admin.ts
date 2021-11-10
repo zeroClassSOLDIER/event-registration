@@ -4,6 +4,7 @@ import { calendarPlus } from "gd-sprest-bs/build/icons/svgs/calendarPlus";
 import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs";
 import * as moment from "moment";
 import { DataSource, IEventItem } from "./ds";
+import { Registration } from "./registration";
 
 export class Admin {
   // Deletes an event
@@ -201,9 +202,17 @@ export class Admin {
                 pocs.push(eventItem.POC.results[i].EMail);
               }
 
+              // Parse the registered users
+              let users = [];
+              for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
+                // Append the user email
+                users.push(eventItem.RegisteredUsers.results[i].EMail);
+              }
+
               // Send the email
               Utility().sendEmail({
-                To: pocs,
+                To: users,
+                CC: pocs,
                 Body: values["EmailBody"].replace(/\n/g, "<br />"),
                 Subject: values["EmailSubject"]
               }).execute(() => {
@@ -228,7 +237,7 @@ export class Admin {
   }
 
   // Registers a user
-  private registerUser(eventItem: IEventItem) {
+  private registerUser(eventItem: IEventItem, onRefresh: () => void) {
     // Set the modal header
     Modal.setHeader("Register User")
 
@@ -239,7 +248,23 @@ export class Admin {
           name: "User",
           label: "User",
           required: true,
-          type: Components.FormControlTypes.PeoplePicker
+          errorMessage: "A user is required.",
+          type: Components.FormControlTypes.PeoplePicker,
+          onValidate: (ctrl, result) => {
+            // Parse the current POCs
+            let users = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+            for (let i = 0; i < users.length; i++) {
+              // See if the user is already registered
+              if (users[i] == result.value[0].Id) {
+                // User is already registered
+                result.isValid = false;
+                result.invalidMessage = "User is already registered.";
+              }
+            }
+
+            // Return the result
+            return result;
+          }
         }
       ]
     });
@@ -256,7 +281,43 @@ export class Admin {
           onClick: () => {
             // Ensure the form is valid
             if (form.isValid()) {
-              // Register the user
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Registering User");
+              LoadingDialog.setBody("This dialog will close after the user is registered.");
+              LoadingDialog.show();
+
+              // Append the user
+              let userId = form.getValues()["User"][0].Id;
+              let value = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+              value.push(userId);
+              let values = {
+                "RegisteredUsersId": { results: value }
+              };
+
+              // See if the user is waitlisted
+              let waitlist = eventItem.WaitListedUsersId ? eventItem.WaitListedUsersId.results : [];
+              for (let i = 0; i < waitlist.length; i++) {
+                if (waitlist[i] == userId) {
+                  // Remove the user
+                  waitlist.splice(i, 1);
+
+                  // Update the field value
+                  values["WaitListedUsersId"] = { results: waitlist };
+                  break;
+                }
+              }
+
+              // Update the item
+              eventItem.update(values).execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // Close the dialog
+                LoadingDialog.hide();
+              })
             }
           }
         },
@@ -303,8 +364,9 @@ export class Admin {
         },
         {
           text: " Register User",
+          isDisabled: Registration.isFull(eventItem),
           onClick: (button) => {
-            this.registerUser(eventItem);
+            this.registerUser(eventItem, onRefresh);
           },
         },
         {
@@ -318,7 +380,7 @@ export class Admin {
           text: " Unregister User",
           isDisabled: eventItem.POC == null,
           onClick: (button) => {
-            this.unregisterUser(eventItem);
+            this.unregisterUser(eventItem, onRefresh);
           },
         },
         {
@@ -342,20 +404,34 @@ export class Admin {
   }
 
   // Unregisters a user
-  private unregisterUser(eventItem: IEventItem) {
+  private unregisterUser(eventItem: IEventItem, onRefresh: () => void) {
     // Set the modal header
     Modal.setHeader("Unregister User")
+
+    // Parse the current users and generate the checkboxes
+    let items: Components.ICheckboxGroupItem[] = [];
+    let users = eventItem.RegisteredUsers ? eventItem.RegisteredUsers.results : [];
+    for (let i = 0; i < users.length; i++) {
+      let user = users[i];
+
+      // Add the item
+      items.push({
+        data: user,
+        label: user.Title
+      });
+    }
 
     // Create the form
     let form = Components.Form({
       controls: [
         {
-          name: "EmailSubject",
-          label: "Email Subject",
+          name: "Users",
+          label: "Users",
+          items,
           required: true,
-          type: Components.FormControlTypes.PeoplePicker,
-          value: eventItem.Title
-        }
+          errorMessage: "A user is required.",
+          type: Components.FormControlTypes.MultiCheckbox
+        } as Components.IFormControlPropsMultiCheckbox
       ]
     });
 
@@ -369,6 +445,51 @@ export class Admin {
           text: "Unregister",
           type: Components.ButtonTypes.Primary,
           onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Unregistering User(s)");
+              LoadingDialog.setBody("This dialog will close after the user(s) are unregistered.");
+              LoadingDialog.show();
+
+              // Parse the users to remove
+              let newUsers = [];
+              let usersToRemove = form.getValues()["Users"] as Components.ICheckboxGroupItem[];
+              let registeredUsers = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+              for (let i = 0; i < registeredUsers.length; i++) {
+                let userId = registeredUsers[i];
+
+                // Parse the users to remove
+                let removeFl = false;
+                for (let j = 0; j < usersToRemove.length; j++) {
+                  // See if this user is being removed
+                  if (userId == usersToRemove[j].data.Id) {
+                    removeFl = true;
+                    break;
+                  }
+                }
+
+                // See if this user is not being removed
+                if (!removeFl) {
+                  // Remove the user
+                  newUsers.push(userId);
+                }
+              }
+
+              // Update the item
+              eventItem.update({
+                "RegisteredUsersId": { results: newUsers }
+              }).execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // Close the dialog
+                LoadingDialog.hide();
+              });
+            }
           }
         },
         {

@@ -7,21 +7,34 @@ export interface IEventItem extends Types.SP.ListItemOData {
     Description: string;
     StartDate: string;
     EndDate: string;
+    EventStatus: { results: string };
     Location: string;
     OpenSpots: string;
     Capacity: string;
     POC: {
-        results: [{
+        results: {
             EMail: string;
             Id: number;
             Title: string;
-        }]
+        }[]
     };
-    RegisteredUsers: { results: any[] };
+    POCId: { results: number[] };
+    RegisteredUsers: {
+        results: {
+            EMail: string;
+            Id: number;
+            Title: string;
+        }[]
+    };
     RegisteredUsersId: { results: number[] };
-    WaitListedUsers: { results: any[] };
+    WaitListedUsers: {
+        results: {
+            EMail: string;
+            Id: number;
+            Title: string;
+        }[]
+    };
     WaitListedUsersId: { results: number[] };
-    EventStatus: { results: string };
 }
 
 // Configuration

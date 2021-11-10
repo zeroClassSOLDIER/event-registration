@@ -44,15 +44,21 @@ export class Registration {
         });
     }
 
+    // Determines if an event is full
+    static isFull(event: IEventItem) {
+        // Determine if the course is full
+        let numUsers: number = event.RegisteredUsersId ? event.RegisteredUsersId.results.length : 0;
+        let capacity: number = event.Capacity ? (parseInt(event.Capacity) as number) : 0;
+        return numUsers == capacity ? true : false;
+    }
+
     // Renders the registration button
     private render() {
         // See if the user if registered
         let isRegistered = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results.indexOf(ContextInfo.userId) >= 0 : false;
 
         // See if the course is full
-        let numUsers: number = this._item.RegisteredUsersId ? this._item.RegisteredUsersId.results.length : 0;
-        let capacity: number = this._item.Capacity ? (parseInt(this._item.Capacity) as number) : 0;
-        let eventFull: boolean = numUsers == capacity ? true : false;
+        let eventFull = Registration.isFull(this._item);
 
         // Check if user is on the waitlist
         let userID = ContextInfo.userId;
