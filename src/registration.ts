@@ -27,7 +27,7 @@ export class Registration {
     }
 
     // Gets the user email
-    private getUserEmail(userFromWaitlist: number): PromiseLike<string> {
+    static getUserEmail(userFromWaitlist: number): PromiseLike<string> {
         // Return a promise
         return new Promise((resolve) => {
             // See if the user is from the wait list
@@ -201,7 +201,7 @@ export class Registration {
                         // Success
                         () => {
                             // Send email
-                            this.sendMail(userFromWaitlist, userIsRegistering).then(() => {
+                            Registration.sendMail(this._item, userFromWaitlist, userIsRegistering).then(() => {
                                 // Hide the dialog
                                 LoadingDialog.hide();
 
@@ -220,24 +220,24 @@ export class Registration {
     }
 
     // Sends an email
-    private sendMail(userFromWaitlist: number, userIsRegistering: boolean): PromiseLike<void> {
+    static sendMail(event: IEventItem, userFromWaitlist: number, userIsRegistering: boolean): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
             // Do nothing if the user is unregistering from the event
             if (!userIsRegistering) { resolve(); return; }
 
             // Get the user email
-            this.getUserEmail(userFromWaitlist).then(userEmail => {
+            Registration.getUserEmail(userFromWaitlist).then(userEmail => {
                 // Set the body of the email
                 let body = `${ContextInfo.userDisplayName}, you have successfully ${userFromWaitlist > 0 ? "been added from the waitlist" : "registered"} for the following event:
-            <p><strong>Title:</strong>${this._item.Title}</p></br>
-            <p><strong>Description:</strong>${this._item.Description}</p></br>
-            <p><strong>Start Date:</strong>${moment(this._item.StartDate).format("MM-DD-YYYY HH:mm")}</p></br>
-            <p><strong>End Date:</strong>${moment(this._item.EndDate).format("MM-DD-YYYY HH:mm")}</p></br>
-            <p><strong>Location:</strong>${this._item.Location}`;
+                    <p><strong>Title:</strong>${event.Title}</p></br>
+                    <p><strong>Description:</strong>${event.Description}</p></br>
+                    <p><strong>Start Date:</strong>${moment(event.StartDate).format("MM-DD-YYYY HH:mm")}</p></br>
+                    <p><strong>End Date:</strong>${moment(event.EndDate).format("MM-DD-YYYY HH:mm")}</p></br>
+                    <p><strong>Location:</strong>${event.Location}`;
 
                 // Set the subject
-                let subject = `Successfully ${userFromWaitlist > 0 ? "added from the waitlist" : "registered"} for the event: ${this._item.Title}`;
+                let subject = `Successfully ${userFromWaitlist > 0 ? "added from the waitlist" : "registered"} for the event: ${event.Title}`;
 
                 // See if the user email exists and is registering for the event
                 if (userEmail || userFromWaitlist > 0) {

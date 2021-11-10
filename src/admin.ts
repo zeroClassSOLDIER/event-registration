@@ -265,6 +265,11 @@ export class Admin {
             // Return the result
             return result;
           }
+        },
+        {
+          name: "SendEmail",
+          label: "Send Email?",
+          type: Components.FormControlTypes.Switch
         }
       ]
     });
@@ -281,6 +286,8 @@ export class Admin {
           onClick: () => {
             // Ensure the form is valid
             if (form.isValid()) {
+              let formValues = form.getValues();
+
               // Close the modal
               Modal.hide();
 
@@ -290,7 +297,7 @@ export class Admin {
               LoadingDialog.show();
 
               // Append the user
-              let userId = form.getValues()["User"][0].Id;
+              let userId = formValues["User"][0].Id;
               let value = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
               value.push(userId);
               let values = {
@@ -315,9 +322,22 @@ export class Admin {
                 // Refresh the dashboard
                 onRefresh();
 
-                // Close the dialog
-                LoadingDialog.hide();
-              })
+                // See if we are sending an email
+                if (formValues["SendEmail"]) {
+                  // Update the loading dialog
+                  LoadingDialog.setHeader("Sending Email");
+                  LoadingDialog.setBody("This dialog will close after the email is sent.");
+
+                  // Send an email
+                  Registration.sendMail(eventItem, userId, true).then(() => {
+                    // Close the dialog
+                    LoadingDialog.hide();
+                  });
+                } else {
+                  // Close the dialog
+                  LoadingDialog.hide();
+                }
+              });
             }
           }
         },

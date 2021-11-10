@@ -1,5 +1,5 @@
 import { Dashboard, ItemForm, LoadingDialog } from "dattatable";
-import { Components, Helper, Web, SPTypes } from "gd-sprest-bs";
+import { Components, Helper, SPTypes } from "gd-sprest-bs";
 import { calendarEvent } from "gd-sprest-bs/build/icons/svgs/calendarEvent";
 import * as jQuery from "jquery";
 import * as moment from "moment";
