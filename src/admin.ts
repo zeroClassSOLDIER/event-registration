@@ -600,7 +600,7 @@ export class Admin {
           },
         },
         {
-          text: " Send Email to Attendees",
+          text: " Send Email",
           isDisabled: Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.sendEmail(eventItem);
@@ -641,6 +641,29 @@ export class Admin {
     // Create the form
     let form = Components.Form({
       controls: [
+        {
+          name: "EmailRecipients",
+          label: "Email Recipients",
+          type: Components.FormControlTypes.MultiSwitch,
+          required: true,
+          errorMessage: "A selection is required to send an email.",
+          items: [
+            {
+              label: "Email POCs",
+              isSelected: true
+            },
+            {
+              label: "Email Members",
+              isSelected: true
+            }
+          ]
+        } as Components.IFormControlPropsMultiSwitch,
+        {
+          name: "EmailMembers",
+          label: "Email Members?",
+          type: Components.FormControlTypes.Switch,
+          value: true
+        },
         {
           name: "EmailSubject",
           label: "Email Subject",
@@ -683,23 +706,39 @@ export class Admin {
               LoadingDialog.setBody("This dialog will close after the email is sent.");
               LoadingDialog.show();
 
-              // Parse the pocs
-              let pocs = [];
-              for (let i = 0; i < eventItem.POC.results.length; i++) {
-                // Append the user email
-                pocs.push(eventItem.POC.results[i].EMail);
+              // Determine who we are sending emails to
+              let emailPOCs = false;
+              let emailMembers = false;
+              let emailRecipients = values["EmailRecipients"] as Components.ICheckboxGroupItem[];
+              for (let i = 0; i < emailRecipients.length; i++) {
+                let emailRecipient = emailRecipients[i];
+                if (emailRecipient.label.indexOf("POC") >= 0) { emailPOCs = true; }
+                else if (emailRecipient.label.indexOf("Member") >= 0) { emailMembers = true; }
               }
 
-              // Parse the registered users
-              let users = [];
-              for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
-                // Append the user email
-                users.push(eventItem.RegisteredUsers.results[i].EMail);
+              // See if we are emailing POCs
+              let pocs = [];
+              if (emailPOCs) {
+                // Parse the pocs
+                for (let i = 0; i < eventItem.POC.results.length; i++) {
+                  // Append the user email
+                  pocs.push(eventItem.POC.results[i].EMail);
+                }
+              }
+
+              // See if we are emailing Members
+              let members = [];
+              if (emailMembers) {
+                // Parse the registered users
+                for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
+                  // Append the user email
+                  members.push(eventItem.RegisteredUsers.results[i].EMail);
+                }
               }
 
               // Send the email
               Utility().sendEmail({
-                To: users,
+                To: members,
                 CC: pocs,
                 Body: values["EmailBody"].replace(/\n/g, "<br />"),
                 Subject: values["EmailSubject"]
