@@ -161,84 +161,6 @@ export class Admin {
     Modal.show();
   }
 
-  // Generates the navigation items
-  generateNavItems(canEditEvent: boolean, onRefresh: () => void): Components.INavbarItem[] {
-    let navItems: Components.INavbarItem[] = [];
-
-    // See if this is the admin
-    if (DataSource.IsAdmin) {
-      // Add the new event option
-      navItems.push({
-        className: "btn-primary",
-        isDisabled: !canEditEvent,
-        text: " NEW EVENT",
-        isButton: true,
-        onClick: () => {
-          // Create an item
-          ItemForm.create({
-            onUpdate: () => { onRefresh(); },
-            onCreateEditForm: props => { return this.updateProps(props); },
-            onFormButtonsRendering: buttons => { return this.updateFooter(buttons); }
-          });
-
-          // Update the modal
-          Modal.setScrollable(true);
-        },
-        iconType: calendarPlus,
-        iconSize: 18,
-      });
-
-      // Add the manage groups option
-      navItems.push({
-        className: "btn-primary",
-        isDisabled: !canEditEvent,
-        text: "MANAGE GROUPS",
-        isButton: true,
-        items: [
-          {
-            text: "Managers",
-            onClick: () => {
-              // Show the manager's group
-              window.open(DataSource.ManagersUrl, "_blank");
-            },
-          },
-          {
-            text: "Members",
-            onClick: () => {
-              // Show the member's group
-              window.open(DataSource.MembersUrl, "_blank");
-            },
-          },
-        ],
-      });
-
-      // Add an option to manage the application
-      navItems.push({
-        className: "btn-primary",
-        text: "MANAGE APP",
-        isButton: true,
-        onClick: () => {
-          // Display a loading dialog
-          LoadingDialog.setHeader("Analyzing the Assets");
-          LoadingDialog.setBody("Checking the SharePoint assets.");
-          LoadingDialog.show();
-
-          // Determine if an install is required
-          InstallationRequired.requiresInstall(Configuration).then(() => {
-            // Hide the dialog
-            LoadingDialog.hide();
-
-            // Show the installation dialog
-            InstallationRequired.showDialog();
-          });
-        }
-      });
-    }
-
-    // Return the nav items
-    return navItems;
-  }
-
   // Edits the event
   private editEvent(eventItem: IEventItem, onRefresh: () => void) {
     // Display the edit form
@@ -372,6 +294,246 @@ export class Admin {
     Modal.show();
   }
 
+  // Generates the navigation items
+  generateNavItems(canEditEvent: boolean, onRefresh: () => void): Components.INavbarItem[] {
+    let navItems: Components.INavbarItem[] = [];
+
+    // See if this is the admin
+    if (DataSource.IsAdmin) {
+      // Add the new event option
+      navItems.push({
+        className: "btn-primary",
+        isDisabled: !canEditEvent,
+        text: " NEW EVENT",
+        isButton: true,
+        onClick: () => {
+          // Create an item
+          ItemForm.create({
+            onUpdate: () => { onRefresh(); },
+            onCreateEditForm: props => { return this.updateProps(props); },
+            onFormButtonsRendering: buttons => { return this.updateFooter(buttons); }
+          });
+
+          // Update the modal
+          Modal.setScrollable(true);
+        },
+        iconType: calendarPlus,
+        iconSize: 18,
+      });
+
+      // Add the manage groups option
+      navItems.push({
+        className: "btn-primary",
+        isDisabled: !canEditEvent,
+        text: "MANAGE GROUPS",
+        isButton: true,
+        items: [
+          {
+            text: "Managers",
+            onClick: () => {
+              // Show the manager's group
+              window.open(DataSource.ManagersUrl, "_blank");
+            },
+          },
+          {
+            text: "Members",
+            onClick: () => {
+              // Show the member's group
+              window.open(DataSource.MembersUrl, "_blank");
+            },
+          },
+        ],
+      });
+
+      // Add an option to manage the application
+      navItems.push({
+        className: "btn-primary",
+        text: "MANAGE APP",
+        isButton: true,
+        onClick: () => {
+          // Display a loading dialog
+          LoadingDialog.setHeader("Analyzing the Assets");
+          LoadingDialog.setBody("Checking the SharePoint assets.");
+          LoadingDialog.show();
+
+          // Determine if an install is required
+          InstallationRequired.requiresInstall(Configuration).then(() => {
+            // Hide the dialog
+            LoadingDialog.hide();
+
+            // Show the installation dialog
+            InstallationRequired.showDialog();
+          });
+        }
+      });
+    }
+
+    // Return the nav items
+    return navItems;
+  }
+
+  // Manages the waitlist users
+  private manageWaitlist(eventItem: IEventItem, onRefresh: () => void) {
+    // Set the modal header
+    Modal.setHeader("Manage Waitlist")
+
+    // Parse the waitlisted users and generate the checkboxes
+    let items: Components.ICheckboxGroupItem[] = [];
+    let users = eventItem.WaitListedUsers ? eventItem.WaitListedUsers.results : [];
+    for (let i = 0; i < users.length; i++) {
+      let user = users[i];
+
+      // Add the item
+      items.push({
+        data: user,
+        label: user.Title
+      });
+    }
+
+    // Create the form
+    let form = Components.Form({
+      controls: [
+        {
+          name: "Users",
+          label: "Users",
+          items,
+          required: true,
+          errorMessage: "A user is required.",
+          type: Components.FormControlTypes.MultiCheckbox,
+          onValidate: (ctrl, results) => {
+            // See if users being added exceed the capacity
+            if (eventItem.RegisteredUsers.results.length + results.value.length > eventItem.Capacity) {
+              // Update the flag
+              results.isValid = false;
+              results.invalidMessage = "The selected users will exceed the capacity of the event.";
+            }
+
+            // Return the results
+            return results;
+          }
+        } as Components.IFormControlPropsMultiCheckbox
+      ]
+    });
+
+    // Set the modal body
+    Modal.setBody(form.el);
+
+    // Set the modal footer
+    Modal.setFooter(Components.ButtonGroup({
+      buttons: [
+        {
+          text: "Delete",
+          type: Components.ButtonTypes.Danger,
+          onClick: () => {
+            let formValues = form.getValues();
+
+            // Close the modal
+            Modal.hide();
+
+            // Show a loading dialog
+            LoadingDialog.setHeader("Removing User(s)");
+            LoadingDialog.setBody("This dialog will close after the user(s) are removed.");
+            LoadingDialog.show();
+
+            // Parse the waitlisted users
+            let usersToRemove: Components.ICheckboxGroupItem[] = formValues["Users"];
+            let waitlistedUsers = eventItem.WaitListedUsersId ? eventItem.WaitListedUsersId.results : [];
+            for (let i = 0; i < usersToRemove.length; i++) {
+              let userId = usersToRemove[i].data.Id;
+
+              // Find the user
+              let idx = waitlistedUsers.indexOf(userId);
+
+              // Remove the user
+              waitlistedUsers.splice(idx, 1);
+            }
+
+            // Update the item
+            eventItem.update({
+              "WaitListedUsersId": { results: waitlistedUsers }
+            }).execute(() => {
+              // Refresh the dashboard
+              onRefresh();
+
+              // Close the dialog
+              LoadingDialog.hide();
+            });
+          }
+        },
+        {
+          text: "Register",
+          type: Components.ButtonTypes.Primary,
+          onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              let formValues = form.getValues();
+
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Registering User(s)");
+              LoadingDialog.setBody("This dialog will close after the user(s) are registered.");
+              LoadingDialog.show();
+
+              // Parse the waitlisted users
+              let usersToAdd: Components.ICheckboxGroupItem[] = formValues["Users"];
+              let registeredUsers = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+              let waitlistedUsers = [];
+              for (let i = 0; i < items.length; i++) {
+                let userId = items[i].data.Id;
+
+                // Parse the users to add
+                let registerUser = false;
+                for (let j = 0; j < usersToAdd.length; j++) {
+                  let user = usersToAdd[j];
+
+                  // See if this user is being registered
+                  if (user.data.Id == userId) {
+                    // Set the flag
+                    registerUser = true;
+                    break;
+                  }
+                }
+
+                // See if we are registering the user
+                if (registerUser) {
+                  // Append the registered user
+                  registeredUsers.push(userId);
+                } else {
+                  // Append the waitlisted user
+                  waitlistedUsers.push(userId);
+                }
+              }
+
+              // Update the item
+              eventItem.update({
+                "RegisteredUsersId": { results: registeredUsers },
+                "WaitListedUsersId": { results: waitlistedUsers }
+              }).execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // Close the dialog
+                LoadingDialog.hide();
+              });
+            }
+          }
+        },
+        {
+          text: "Cancel",
+          type: Components.ButtonTypes.Secondary,
+          onClick: () => {
+            Modal.hide();
+          }
+        }
+      ]
+    }).el);
+
+    // Display the modal
+    Modal.show();
+  }
+
   // Renders the event menu
   renderEventMenu(el: HTMLElement, eventItem: IEventItem, canEditEvent: boolean, canDeleteEvent: boolean, onRefresh: () => void) {
     // Add the admin dropdown
@@ -404,7 +566,7 @@ export class Admin {
           text: " Manage Waitlist",
           isDisabled: eventItem.IsCancelled || eventItem.WaitListedUsersId == null,
           onClick: (button) => {
-            // TODO
+            this.manageWaitlist(eventItem, onRefresh);
           },
         },
         {
