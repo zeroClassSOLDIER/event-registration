@@ -600,7 +600,7 @@ export class Admin {
           },
         },
         {
-          text: " Send Email",
+          text: " Send Email to Attendees",
           isDisabled: Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.sendEmail(eventItem);
