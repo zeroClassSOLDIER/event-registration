@@ -66,38 +66,6 @@ export class App {
     let admin = new Admin();
     let member = new Member();
 
-    // Define the datatables.net column definitions
-    let columnDefs: any = [
-      {
-        targets: this._isAdmin || DataSource.Configuration.hideAddToCalenderColumn == true ? [6, 10, 11] : [6, 10, 11, 12],
-        orderable: false,
-        searchable: false,
-      },
-      { width: "10%", targets: [3, 4] },
-      {
-        targets: 2, render: function (data, type, row) {
-          // Limit the length of the Description column to 50 chars
-          let esc = function (t) {
-            return t
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;');
-          };
-          // Order, search and type get the original data
-          if (type !== 'display') { return data; }
-          if (typeof data !== 'number' && typeof data !== 'string') { return data; }
-          data = data.toString(); // cast numbers
-          if (data.length < 50) { return data; }
-
-          // Find the last white space character in the string
-          let trunc = esc(data.substr(0, 50).replace(/\s([^\s]*)$/, ''));
-          return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
-        }
-      },
-    ];
-    this._isAdmin || DataSource.Configuration.hideAddToCalenderColumn == true ? columnDefs.push({ targets: [12], visible: false }) : null;
-
     // Create the dashboard
     this._dashboard = new Dashboard({
       el: this._el,
@@ -143,7 +111,36 @@ export class App {
         rows: DataSource.Events,
         dtProps: {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
-          columnDefs,
+          columnDefs: [
+            {
+              targets: [6, 10, 11, 12],
+              orderable: false,
+              searchable: false,
+            },
+            { width: "10%", targets: [3, 4] },
+            {
+              targets: 2, render: function (data, type, row) {
+                // Limit the length of the Description column to 50 chars
+                let esc = function (t) {
+                  return t
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+                };
+                // Order, search and type get the original data
+                if (type !== 'display') { return data; }
+                if (typeof data !== 'number' && typeof data !== 'string') { return data; }
+                data = data.toString(); // cast numbers
+                if (data.length < 50) { return data; }
+
+                // Find the last white space character in the string
+                let trunc = esc(data.substr(0, 50).replace(/\s([^\s]*)$/, ''));
+                return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
+              }
+            },
+            this._isAdmin || DataSource.Configuration.hideAddToCalendarColumn == true ? { targets: [12], visible: false } : null
+          ],
           // Add some classes to the dataTable elements
           drawCallback: function () {
             jQuery(".table", this._table).removeClass("no-footer");

@@ -43,7 +43,7 @@ export interface IConfiguration {
     adminGroupName?: string;
     headerImage?: string;
     headerTitle?: string;
-    hideAddToCalenderColumn?: boolean;
+    hideAddToCalendarColumn?: boolean;
     hideHeader?: boolean;
     membersGroupName?: string;
 }
