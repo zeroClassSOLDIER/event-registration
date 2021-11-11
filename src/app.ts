@@ -389,6 +389,7 @@ export class App {
             name: "",
             title: " Registration",
             onRenderCell: (el, column, item: IEventItem) => {
+              if (item.IsCancelled) { return; }
               new Registration(el, item, () => { this.refresh(); });
             },
           },
