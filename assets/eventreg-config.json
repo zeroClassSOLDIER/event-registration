@@ -1,8 +1,8 @@
 {
     "adminGroupName": "",
-    "generateCalenderEvent": false,
     "headerImage": "",
     "headerTitle": "",
+    "hideAddToCalenderColumn": true,
     "hideHeader": false,
     "membersGroupName": ""
 }

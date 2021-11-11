@@ -139,7 +139,7 @@ export class App {
                 return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
               }
             },
-            this._isAdmin || DataSource.Configuration.generateCalenderEvent == false ? { targets: [12], visible: false } : null
+            this._isAdmin || DataSource.Configuration.hideAddToCalenderColumn == true ? { targets: [12], visible: false } : null
           ],
           // Add some classes to the dataTable elements
           drawCallback: function () {

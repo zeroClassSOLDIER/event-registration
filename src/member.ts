@@ -17,7 +17,7 @@ export class Member {
             items: [
                 {
                     text: " Send Email to POCs",
-                    isDisabled: Registration.isEmpty(eventItem),
+                    isDisabled: eventItem.POC == null,
                     onClick: (button) => {
                         this.sendEmail(eventItem);
                     },
@@ -27,14 +27,14 @@ export class Member {
 
         let elButton = ddl.el.querySelector("button");
         if (elButton) {
-          // Update the class
-          elButton.classList.add("btn-icon");
-          elButton.classList.add("w-100");
-    
-          // Append the icon
-          elButton.appendChild(gearWideConnected(16));
+            // Update the class
+            elButton.classList.add("btn-icon");
+            elButton.classList.add("w-100");
+
+            // Append the icon
+            elButton.appendChild(gearWideConnected(16));
         }
-        }
+    }
 
     // Sends an email to the event members
     private sendEmail(eventItem: IEventItem) {

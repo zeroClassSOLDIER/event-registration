@@ -41,9 +41,9 @@ export interface IEventItem extends Types.SP.ListItemOData {
 // Configuration
 export interface IConfiguration {
     adminGroupName?: string;
-    generateCalenderEvent?: boolean;
     headerImage?: string;
     headerTitle?: string;
+    hideAddToCalenderColumn?: boolean;
     hideHeader?: boolean;
     membersGroupName?: string;
 }
