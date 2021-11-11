@@ -591,9 +591,9 @@ export class Admin {
           onClick: (button) => {
             // See if the event is cancelled
             if (eventItem.IsCancelled) {
-              this.cancelEvent(eventItem, onRefresh);
-            } else {
               this.uncancelEvent(eventItem, onRefresh);
+            } else {
+              this.cancelEvent(eventItem, onRefresh);
             }
           },
         },
