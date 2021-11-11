@@ -330,8 +330,12 @@ export class App {
                   content: "Full",
                   className: "w-50",
                 });
+
+                // Render a new line
                 let breakLine = document.createElement("br");
                 el.appendChild(breakLine);
+
+                // Render a badge for the waitlisted users
                 Components.Badge({
                   el: el,
                   type: Components.BadgeTypes.Primary,
@@ -339,7 +343,23 @@ export class App {
                   className: "w-100",
                 });
               } else {
+                // Render the capacity
                 el.innerHTML = (capacity - numUsers).toString();
+
+                // See if wait users exist
+                if (numWaitlisted > 0) {
+                  // Render a new line
+                  let breakLine = document.createElement("br");
+                  el.appendChild(breakLine);
+
+                  // Render a badge for the waitlisted users
+                  Components.Badge({
+                    el: el,
+                    type: Components.BadgeTypes.Primary,
+                    content: numWaitlisted + " Waitlisted",
+                    className: "w-100",
+                  });
+                }
               }
             },
           },
