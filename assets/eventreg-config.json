@@ -2,7 +2,7 @@
     "adminGroupName": "",
     "headerImage": "",
     "headerTitle": "",
-    "hideAddToCalenderColumn": true,
+    "hideAddToCalenderColumn": false,
     "hideHeader": false,
     "membersGroupName": ""
 }
