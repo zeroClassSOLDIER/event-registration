@@ -16,7 +16,7 @@ export class Member {
             className: "eventRegAdmin",
             items: [
                 {
-                    text: " Send Email",
+                    text: " Send Email to POCs",
                     isDisabled: Registration.isEmpty(eventItem),
                     onClick: (button) => {
                         this.sendEmail(eventItem);
