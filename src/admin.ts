@@ -587,10 +587,14 @@ export class Admin {
       className: "eventRegAdmin",
       items: [
         {
-          text: " Cancel",
-          isDisabled: eventItem.IsCancelled,
+          text: eventItem.IsCancelled ? " Uncancel" : " Cancel",
           onClick: (button) => {
-            this.cancelEvent(eventItem, onRefresh);
+            // See if the event is cancelled
+            if (eventItem.IsCancelled) {
+              this.cancelEvent(eventItem, onRefresh);
+            } else {
+              this.uncancelEvent(eventItem, onRefresh);
+            }
           },
         },
         {
@@ -760,6 +764,102 @@ export class Admin {
               }).execute(() => {
                 // Close the loading dialog
                 LoadingDialog.hide();
+              });
+            }
+          }
+        },
+        {
+          text: "Cancel",
+          type: Components.ButtonTypes.Secondary,
+          onClick: () => {
+            Modal.hide();
+          }
+        }
+      ]
+    }).el);
+
+    // Display the modal
+    Modal.show();
+  }
+
+  // Cancels an event
+  private uncancelEvent(eventItem: IEventItem, onRefresh: () => void) {
+    // Set the modal header
+    Modal.setHeader("Uncancel Event");
+
+    // Create the form
+    let form = Components.Form({
+      controls: [
+        {
+          type: Components.FormControlTypes.Readonly,
+          value: "Are you sure you want to uncancel the event?"
+        },
+        {
+          name: "SendEmail",
+          label: "Send Email?",
+          type: Components.FormControlTypes.Switch,
+          value: true
+        }
+      ]
+    });
+
+    // Set the modal body
+    Modal.setBody(form.el);
+
+    // Set the modal footer
+    Modal.setFooter(Components.ButtonGroup({
+      buttons: [
+        {
+          text: "Confirm",
+          type: Components.ButtonTypes.Primary,
+          onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              let sendEmail = form.getValues()["SendEmail"];
+
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Cancelling Event");
+              LoadingDialog.setBody("This dialog will close after the item is updated.");
+              LoadingDialog.show();
+
+              // Update the item
+              eventItem.update({ IsCancelled: false }).execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // See if we are sending an email
+                if (sendEmail) {
+                  // Parse the pocs
+                  let pocs = [];
+                  for (let i = 0; i < eventItem.POC.results.length; i++) {
+                    // Append the user email
+                    pocs.push(eventItem.POC.results[i].EMail);
+                  }
+
+                  // Parse the registered users
+                  let users = [];
+                  for (let i = 0; i < eventItem.RegisteredUsers.results.length; i++) {
+                    // Append the user email
+                    users.push(eventItem.RegisteredUsers.results[i].EMail);
+                  }
+
+                  // Send the email
+                  Utility().sendEmail({
+                    To: users,
+                    CC: pocs,
+                    Subject: "Event '" + eventItem.Title + "' Uncancelled",
+                    Body: '<p>Event Members,</p><p>The event is no longer cancelled.</p><p>r/,</p><p>Event Registration Admins</p>'
+                  }).execute(() => {
+                    // Close the loading dialog
+                    LoadingDialog.hide();
+                  });
+                } else {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                }
               });
             }
           }
