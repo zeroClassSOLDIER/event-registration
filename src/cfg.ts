@@ -90,6 +90,13 @@ export const Configuration = Helper.SPConfig({
                     showInEditForm: false,
                     showInNewForm: false,
                 } as Helper.IFieldInfoUser,
+                {
+                    name: "IsCancelled",
+                    title: "Is Cancelled?",
+                    type: Helper.SPCfgFieldType.Boolean,
+                    showInEditForm: false,
+                    showInNewForm: false,
+                }
             ],
             ViewInformation: [
                 {

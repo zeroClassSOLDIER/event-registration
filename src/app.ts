@@ -7,6 +7,7 @@ import { Admin } from "./admin";
 import { Calendar } from "./calendar";
 import { DocumentsView } from "./documents"
 import { DataSource, IEventItem } from "./ds";
+import { Member } from "./member";
 import { Registration } from "./registration";
 import Strings from "./strings";
 
@@ -63,13 +64,14 @@ export class App {
   // Renders the dashboard
   private render() {
     let admin = new Admin();
+    let member = new Member();
 
     // Create the dashboard
     this._dashboard = new Dashboard({
       el: this._el,
       useModal: true,
       hideFilter: !this._isAdmin ? true : false,
-      hideHeader: DataSource.Configuration.displayHeader,
+      hideHeader: DataSource.Configuration.hideHeader,
       header: {
         title: DataSource.Configuration.headerTitle || Strings.ProjectName,
         onRendered: (el) => {
@@ -137,7 +139,7 @@ export class App {
                 return '<span title="' + esc(data) + '">' + trunc + '&#8230;</span>';
               }
             },
-            this._isAdmin ? { targets: [12], visible: false } : { targets: [11], visible: false },
+            this._isAdmin ? { targets: [12], visible: false } : null,
           ],
           // Add some classes to the dataTable elements
           drawCallback: function () {
@@ -191,14 +193,15 @@ export class App {
                         return props;
                       },
                       onSetFooter: (elFooter) => {
-                        let closeButton = Components.Button({
+                        // Render the close button
+                        Components.Button({
                           el: elFooter,
                           text: "Close",
                           type: Components.ButtonTypes.Secondary,
                           onClick: (button) => {
                             ItemForm.close();
                           }
-                        })
+                        });
                       }
                     });
                     document.querySelector(".modal-dialog").classList.add("modal-dialog-scrollable");
@@ -222,21 +225,36 @@ export class App {
               let dateDiff = moment(startReset, "DD/MM/YYYY").diff(moment(currReset, "DD/MM/YYYY"), "hours");
               console.log("dateDiff: " + moment(currReset).format("DD MMM YYYY hh:mm a") + " - " + moment(startReset).format("DD MMM YYYY hh:mm a") + " = " + dateDiff);
 
-              // See if the event starts w/in 24 hours
-              if (dateDiff <= 24 && dateDiff > 0) {
+              // See if this event is cancelled
+              if (item.IsCancelled) {
                 // Add a break after title
                 let elBreak = document.createElement("br");
                 el.appendChild(elBreak);
-                // Add the span-container for the badge
-                let elBadge = document.createElement("span");
-                el.appendChild(elBadge);
 
-                // Set the properties for badge
+                // Render a badge
+                Components.Badge({
+                  el,
+                  content: "CANCELLED",
+                  isPill: true,
+                  type: Components.BadgeTypes.Info
+                });
+              }
+              // Else, see if the event starts w/in 24 hours
+              else if (dateDiff <= 24 && dateDiff > 0) {
+                // Update the style
                 el.style.fontWeight = "bold";
-                elBadge.style.fontSize = "11px";
-                elBadge.style.fontWeight = "bold";
-                elBadge.className = "badge rounded-pill bg-danger";
-                elBadge.innerText = "LAST DAY TO REGISTER!";
+
+                // Add a break after title
+                let elBreak = document.createElement("br");
+                el.appendChild(elBreak);
+
+                // Render a badge
+                Components.Badge({
+                  el,
+                  content: "LAST DAY TO REGISTER!",
+                  isPill: true,
+                  type: Components.BadgeTypes.Danger
+                });
               }
             },
           },
@@ -355,11 +373,17 @@ export class App {
             },
           },
           {
-            // 11 - Administration dropdown
+            // 11 - User/Admin Options
             name: "",
-            title: "Manage Event",
+            title: this._isAdmin ? "Manage Event" : "Event Options",
             onRenderCell: (el, column, item: IEventItem) => {
-              admin.renderEventMenu(el, item, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
+              if (this._isAdmin) {
+                // Render the admin menu
+                admin.renderEventMenu(el, item, this._canEditEvent, this._canDeleteEvent, () => { this.refresh(); });
+              } else {
+                // Render the user menu
+                member.renderEventMenu(el, item);
+              }
             },
           },
           {

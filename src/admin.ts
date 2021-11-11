@@ -1,7 +1,7 @@
 import { InstallationRequired, ItemForm, LoadingDialog, Modal } from "dattatable";
 import { Components, Utility } from "gd-sprest-bs";
 import { calendarPlus } from "gd-sprest-bs/build/icons/svgs/calendarPlus";
-import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs";
+import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs/gearWideConnected";
 import * as moment from "moment";
 import { Configuration } from "./cfg";
 import { DataSource, IEventItem } from "./ds";
@@ -51,8 +51,8 @@ export class Admin {
               LoadingDialog.setBody("This dialog will close after the item is updated.");
               LoadingDialog.show();
 
-              // Delete the item
-              eventItem.delete().execute(() => {
+              // Update the item
+              eventItem.update({ IsCancelled: true }).execute(() => {
                 // Refresh the dashboard
                 onRefresh();
 
@@ -94,7 +94,7 @@ export class Admin {
           text: "Cancel",
           type: Components.ButtonTypes.Secondary,
           onClick: () => {
-            ItemForm.close();
+            Modal.hide();
           }
         }
       ]
@@ -362,7 +362,7 @@ export class Admin {
           text: "Cancel",
           type: Components.ButtonTypes.Secondary,
           onClick: () => {
-            ItemForm.close();
+            Modal.hide();
           }
         }
       ]
@@ -381,12 +381,13 @@ export class Admin {
       items: [
         {
           text: " Cancel",
+          isDisabled: eventItem.IsCancelled,
           onClick: (button) => {
             this.cancelEvent(eventItem, onRefresh);
           },
         },
         {
-          isDisabled: !canEditEvent,
+          isDisabled: eventItem.IsCancelled || !canEditEvent,
           text: " Edit",
           onClick: (button) => {
             this.editEvent(eventItem, onRefresh);
@@ -401,14 +402,14 @@ export class Admin {
         },
         {
           text: " Manage Waitlist",
-          isDisabled: eventItem.WaitListedUsersId == null,
+          isDisabled: eventItem.IsCancelled || eventItem.WaitListedUsersId == null,
           onClick: (button) => {
             // TODO
           },
         },
         {
           text: " Register User",
-          isDisabled: Registration.isFull(eventItem),
+          isDisabled: eventItem.IsCancelled || Registration.isFull(eventItem),
           onClick: (button) => {
             this.registerUser(eventItem, onRefresh);
           },
@@ -422,7 +423,7 @@ export class Admin {
         },
         {
           text: " Unregister User",
-          isDisabled: Registration.isEmpty(eventItem),
+          isDisabled: eventItem.IsCancelled || Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.unregisterUser(eventItem, onRefresh);
           },
@@ -436,14 +437,14 @@ export class Admin {
       ],
     });
 
-    let adminDropdownEl = adminDropdown.el.querySelector("button");
-    if (adminDropdownEl) {
+    let elButton = adminDropdown.el.querySelector("button");
+    if (elButton) {
       // Update the class
-      adminDropdownEl.classList.add("btn-icon");
-      adminDropdownEl.classList.add("w-100");
+      elButton.classList.add("btn-icon");
+      elButton.classList.add("w-100");
 
       // Append the icon
-      adminDropdownEl.appendChild(gearWideConnected(16));
+      elButton.appendChild(gearWideConnected(16));
     }
   }
 
@@ -528,7 +529,7 @@ export class Admin {
           text: "Cancel",
           type: Components.ButtonTypes.Secondary,
           onClick: () => {
-            ItemForm.close();
+            Modal.hide();
           }
         }
       ]
@@ -631,7 +632,7 @@ export class Admin {
           text: "Cancel",
           type: Components.ButtonTypes.Secondary,
           onClick: () => {
-            ItemForm.close();
+            Modal.hide();
           }
         }
       ]

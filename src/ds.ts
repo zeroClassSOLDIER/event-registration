@@ -8,6 +8,7 @@ export interface IEventItem extends Types.SP.ListItemOData {
     StartDate: string;
     EndDate: string;
     EventStatus: { results: string };
+    IsCancelled: boolean;
     Location: string;
     OpenSpots: string;
     Capacity: string;
@@ -40,9 +41,9 @@ export interface IEventItem extends Types.SP.ListItemOData {
 // Configuration
 export interface IConfiguration {
     adminGroupName?: string;
-    displayHeader?: boolean;
     headerImage?: string;
     headerTitle?: string;
+    hideHeader?: boolean;
     membersGroupName?: string;
 }
 /**
