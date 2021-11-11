@@ -1,5 +1,5 @@
 import { InstallationRequired, ItemForm, LoadingDialog, Modal } from "dattatable";
-import { Components, Utility } from "gd-sprest-bs";
+import { Components, Helper, Utility } from "gd-sprest-bs";
 import { calendarPlus } from "gd-sprest-bs/build/icons/svgs/calendarPlus";
 import { gearWideConnected } from "gd-sprest-bs/build/icons/svgs/gearWideConnected";
 import * as moment from "moment";
@@ -175,125 +175,6 @@ export class Admin {
     Modal.setScrollable(true);
   }
 
-  // Registers a user
-  private registerUser(eventItem: IEventItem, onRefresh: () => void) {
-    // Set the modal header
-    Modal.setHeader("Register User")
-
-    // Create the form
-    let form = Components.Form({
-      controls: [
-        {
-          name: "User",
-          label: "User",
-          required: true,
-          errorMessage: "A user is required.",
-          type: Components.FormControlTypes.PeoplePicker,
-          onValidate: (ctrl, result) => {
-            // Parse the current POCs
-            let users = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
-            for (let i = 0; i < users.length; i++) {
-              // See if the user is already registered
-              if (users[i] == result.value[0].Id) {
-                // User is already registered
-                result.isValid = false;
-                result.invalidMessage = "User is already registered.";
-              }
-            }
-
-            // Return the result
-            return result;
-          }
-        },
-        {
-          name: "SendEmail",
-          label: "Send Email?",
-          type: Components.FormControlTypes.Switch
-        }
-      ]
-    });
-
-    // Set the modal body
-    Modal.setBody(form.el);
-
-    // Set the modal footer
-    Modal.setFooter(Components.ButtonGroup({
-      buttons: [
-        {
-          text: "Register",
-          type: Components.ButtonTypes.Primary,
-          onClick: () => {
-            // Ensure the form is valid
-            if (form.isValid()) {
-              let formValues = form.getValues();
-
-              // Close the modal
-              Modal.hide();
-
-              // Show a loading dialog
-              LoadingDialog.setHeader("Registering User");
-              LoadingDialog.setBody("This dialog will close after the user is registered.");
-              LoadingDialog.show();
-
-              // Append the user
-              let userId = formValues["User"][0].Id;
-              let value = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
-              value.push(userId);
-              let values = {
-                "RegisteredUsersId": { results: value }
-              };
-
-              // See if the user is waitlisted
-              let waitlist = eventItem.WaitListedUsersId ? eventItem.WaitListedUsersId.results : [];
-              for (let i = 0; i < waitlist.length; i++) {
-                if (waitlist[i] == userId) {
-                  // Remove the user
-                  waitlist.splice(i, 1);
-
-                  // Update the field value
-                  values["WaitListedUsersId"] = { results: waitlist };
-                  break;
-                }
-              }
-
-              // Update the item
-              eventItem.update(values).execute(() => {
-                // Refresh the dashboard
-                onRefresh();
-
-                // See if we are sending an email
-                if (formValues["SendEmail"]) {
-                  // Update the loading dialog
-                  LoadingDialog.setHeader("Sending Email");
-                  LoadingDialog.setBody("This dialog will close after the email is sent.");
-
-                  // Send an email
-                  Registration.sendMail(eventItem, userId, true).then(() => {
-                    // Close the dialog
-                    LoadingDialog.hide();
-                  });
-                } else {
-                  // Close the dialog
-                  LoadingDialog.hide();
-                }
-              });
-            }
-          }
-        },
-        {
-          text: "Cancel",
-          type: Components.ButtonTypes.Secondary,
-          onClick: () => {
-            Modal.hide();
-          }
-        }
-      ]
-    }).el);
-
-    // Display the modal
-    Modal.show();
-  }
-
   // Generates the navigation items
   generateNavItems(canEditEvent: boolean, onRefresh: () => void): Components.INavbarItem[] {
     let navItems: Components.INavbarItem[] = [];
@@ -411,7 +292,12 @@ export class Admin {
             // Return the results
             return results;
           }
-        } as Components.IFormControlPropsMultiCheckbox
+        } as Components.IFormControlPropsMultiCheckbox,
+        {
+          name: "SendEmail",
+          label: "Send Email?",
+          type: Components.FormControlTypes.Switch
+        }
       ]
     });
 
@@ -467,6 +353,7 @@ export class Admin {
             // Ensure the form is valid
             if (form.isValid()) {
               let formValues = form.getValues();
+              let sendEmail = formValues["SendEmail"];
 
               // Close the modal
               Modal.hide();
@@ -514,8 +401,144 @@ export class Admin {
                 // Refresh the dashboard
                 onRefresh();
 
-                // Close the dialog
-                LoadingDialog.hide();
+                // See if we are sending an email
+                if (sendEmail) {
+                  Helper.Executor(usersToAdd, user => {
+                    // Return a promise
+                    return new Promise((resolve, reject) => {
+                      // Send an email
+                      Registration.sendMail(eventItem, user.data.Id, true).then(() => {
+                        // Resolve the request
+                        resolve(null);
+                      }, reject);
+                    }).then(() => {
+                      // Close the dialog
+                      LoadingDialog.hide();
+                    });
+                  });
+                } else {
+                  // Close the dialog
+                  LoadingDialog.hide();
+                }
+              });
+            }
+          }
+        },
+        {
+          text: "Cancel",
+          type: Components.ButtonTypes.Secondary,
+          onClick: () => {
+            Modal.hide();
+          }
+        }
+      ]
+    }).el);
+
+    // Display the modal
+    Modal.show();
+  }
+
+  // Registers a user
+  private registerUser(eventItem: IEventItem, onRefresh: () => void) {
+    // Set the modal header
+    Modal.setHeader("Register User")
+
+    // Create the form
+    let form = Components.Form({
+      controls: [
+        {
+          name: "User",
+          label: "User",
+          required: true,
+          errorMessage: "A user is required.",
+          type: Components.FormControlTypes.PeoplePicker,
+          onValidate: (ctrl, result) => {
+            // Parse the current POCs
+            let users = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+            for (let i = 0; i < users.length; i++) {
+              // See if the user is already registered
+              if (users[i] == result.value[0].Id) {
+                // User is already registered
+                result.isValid = false;
+                result.invalidMessage = "User is already registered.";
+              }
+            }
+
+            // Return the result
+            return result;
+          }
+        },
+        {
+          name: "SendEmail",
+          label: "Send Email?",
+          type: Components.FormControlTypes.Switch
+        }
+      ]
+    });
+
+    // Set the modal body
+    Modal.setBody(form.el);
+
+    // Set the modal footer
+    Modal.setFooter(Components.ButtonGroup({
+      buttons: [
+        {
+          text: "Register",
+          type: Components.ButtonTypes.Primary,
+          onClick: () => {
+            // Ensure the form is valid
+            if (form.isValid()) {
+              let formValues = form.getValues();
+
+              // Close the modal
+              Modal.hide();
+
+              // Show a loading dialog
+              LoadingDialog.setHeader("Registering User");
+              LoadingDialog.setBody("This dialog will close after the user is registered.");
+              LoadingDialog.show();
+
+              // Append the user
+              let userId = formValues["User"][0].Id;
+              let value = eventItem.RegisteredUsersId ? eventItem.RegisteredUsersId.results : [];
+              value.push(userId);
+              let values = {
+                "RegisteredUsersId": { results: value }
+              };
+
+              // See if the user is waitlisted
+              let waitlist = eventItem.WaitListedUsersId ? eventItem.WaitListedUsersId.results : [];
+              for (let i = 0; i < waitlist.length; i++) {
+                if (waitlist[i] == userId) {
+                  // Remove the user
+                  waitlist.splice(i, 1);
+
+                  // Update the field value
+                  values["WaitListedUsersId"] = { results: waitlist };
+                  break;
+                }
+              }
+
+              // Update the item
+              eventItem.update(values).execute(() => {
+                // Refresh the dashboard
+                onRefresh();
+
+                // See if we are sending an email
+                if (formValues["SendEmail"]) {
+                  // Update the loading dialog
+                  LoadingDialog.setHeader("Sending Email");
+                  LoadingDialog.setBody("This dialog will close after the email is sent.");
+
+                  // Send an email
+                  Registration.sendMail(eventItem, userId, true).then(() => {
+                    // Close the dialog
+                    LoadingDialog.hide();
+                  });
+                } else {
+                  // Close the dialog
+                  LoadingDialog.hide();
+                }
               });
             }
           }
