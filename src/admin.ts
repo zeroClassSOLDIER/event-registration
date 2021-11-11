@@ -312,6 +312,7 @@ export class Admin {
           type: Components.ButtonTypes.Danger,
           onClick: () => {
             let formValues = form.getValues();
+            let sendEmail = formValues["SendEmail"];
 
             // Close the modal
             Modal.hide();
@@ -340,6 +341,27 @@ export class Admin {
             }).execute(() => {
               // Refresh the dashboard
               onRefresh();
+
+              // See if we are sending an email
+              if (sendEmail) {
+                // Parse the users to delete
+                let usersToAdd: Components.ICheckboxGroupItem[] = formValues["Users"];
+                Helper.Executor(usersToAdd, user => {
+                  // Return a promise
+                  return new Promise((resolve, reject) => {
+                    // Send an email
+                    Registration.sendMail(eventItem, user.data.Id, false, false).then(() => {
+                      // Resolve the request
+                      resolve(null);
+                    }, reject);
+                  }).then(() => {
+                    // Close the dialog
+                    LoadingDialog.hide();
+                  });
+                });
+              } else {
+
+              }
 
               // Close the dialog
               LoadingDialog.hide();
@@ -407,7 +429,7 @@ export class Admin {
                     // Return a promise
                     return new Promise((resolve, reject) => {
                       // Send an email
-                      Registration.sendMail(eventItem, user.data.Id, true).then(() => {
+                      Registration.sendMail(eventItem, user.data.Id, false, true).then(() => {
                         // Resolve the request
                         resolve(null);
                       }, reject);
@@ -531,7 +553,7 @@ export class Admin {
                   LoadingDialog.setBody("This dialog will close after the email is sent.");
 
                   // Send an email
-                  Registration.sendMail(eventItem, userId, true).then(() => {
+                  Registration.sendMail(eventItem, userId, true, false).then(() => {
                     // Close the dialog
                     LoadingDialog.hide();
                   });
