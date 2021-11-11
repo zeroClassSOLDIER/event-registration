@@ -623,7 +623,6 @@ export class Admin {
         },
         {
           text: " Send Email",
-          isDisabled: Registration.isEmpty(eventItem),
           onClick: (button) => {
             this.sendEmail(eventItem);
           },
@@ -680,12 +679,6 @@ export class Admin {
             }
           ]
         } as Components.IFormControlPropsMultiSwitch,
-        {
-          name: "EmailMembers",
-          label: "Email Members?",
-          type: Components.FormControlTypes.Switch,
-          value: true
-        },
         {
           name: "EmailSubject",
           label: "Email Subject",
