@@ -1,5 +1,6 @@
 {
     "adminGroupName": "",
+    "generateCalenderEvent": false,
     "headerImage": "",
     "headerTitle": "",
     "hideHeader": false,
