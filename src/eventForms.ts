@@ -326,14 +326,17 @@ export class EventForms {
             else if (field.InternalName == "Capacity") {
                 // Add validation
                 ctrl.onValidate = (ctrl, results) => {
+                    // Ensure an item exists
                     let item = ItemForm.FormInfo.item as IEventItem;
-                    let registeredUsers = item.RegisteredUsers ? item.RegisteredUsers.results.length : 0;
+                    if (item) {
+                        let registeredUsers = item.RegisteredUsers ? item.RegisteredUsers.results.length : 0;
 
-                    // See if the value is less than the # of registered users
-                    if (results.value < registeredUsers) {
-                        // Set the results
-                        results.isValid = false;
-                        results.invalidMessage = "The value is less than the current number of registered users.";
+                        // See if the value is less than the # of registered users
+                        if (results.value < registeredUsers) {
+                            // Set the results
+                            results.isValid = false;
+                            results.invalidMessage = "The value is less than the current number of registered users.";
+                        }
                     }
 
                     // Return the results
