@@ -7,7 +7,7 @@ specifiers:
   css-loader: ^6.5.1
   datatables.net: ^1.11.3
   datatables.net-bs5: ^1.11.3
-  dattatable: ^1.3.1
+  dattatable: ^1.3.3
   gd-sprest-bs: ^8.7.8
   html-loader: ^2.1.2
   jquery: ^3.6.0
@@ -25,7 +25,7 @@ specifiers:
 dependencies:
   datatables.net: 1.11.3
   datatables.net-bs5: 1.11.3
-  dattatable: 1.3.1_536511ed722ce94fa5689d3617967ff0
+  dattatable: 1.3.3_536511ed722ce94fa5689d3617967ff0
   gd-sprest-bs: 8.7.8
   jquery: 3.6.0
   moment: 2.29.1
@@ -1812,8 +1812,8 @@ packages:
       jquery: 3.6.0
     dev: false
 
-  /dattatable/1.3.1_536511ed722ce94fa5689d3617967ff0:
-    resolution: {integrity: sha512-cN/x32dUMniDh35IqLb05BOYCTO9Xd4lsTnqjsZxglZCrILk2Zu3ncs00bOje7s4GlcVRbwr30E22ys74gjzgQ==}
+  /dattatable/1.3.3_536511ed722ce94fa5689d3617967ff0:
+    resolution: {integrity: sha512-To5Gv4eKKLH10H4QqvU23jrz2kZCdLo8O0jccyF/ujzoDa27jUdXjKyHKyDCBzixmzaETSHNFVqFhk+rAO0gCA==}
     peerDependencies:
       datatables.net: '*'
       datatables.net-bs5: '*'

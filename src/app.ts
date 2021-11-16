@@ -113,7 +113,7 @@ export class App {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
           columnDefs: [
             {
-              targets: [6, 10, 11, 12],
+              targets: [0, 6, 10, 11, 12],
               orderable: false,
               searchable: false,
             },
