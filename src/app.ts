@@ -97,8 +97,17 @@ export class App {
         ],
       },
       navigation: {
-        showFilter: this._isAdmin,
+        showFilter: false,
         items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); }),
+        onRendered: (el) => {
+          let searchBox = el.querySelector("input[type='search']") as HTMLFormElement;
+          searchBox.classList.add("lh-1");
+          searchBox.classList.add("me-1");
+          searchBox.classList.remove("me-2");
+        }
+      },
+      subNavigation: {
+        showFilter: this._isAdmin,
       },
       footer: {
         itemsEnd: [
@@ -169,7 +178,7 @@ export class App {
               let startDate = item.StartDate;
               let isActive = moment(startDate).isAfter(today);
               el.setAttribute("data-search", isActive ? "Active" : "Past");
-
+              
               // Render the tooltip
               Components.Tooltip({
                 el: el,
