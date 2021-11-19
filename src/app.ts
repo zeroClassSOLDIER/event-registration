@@ -99,11 +99,11 @@ export class App {
       navigation: {
         showFilter: false,
         items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); }),
-        onRendered: (el) => {
-          let searchBox = el.querySelector("input[type='search']") as HTMLFormElement;
-          searchBox.classList.add("lh-1");
-          searchBox.classList.add("me-1");
-          searchBox.classList.remove("me-2");
+        onSearchRendered: (el) => {
+          // Update the classnames
+          el.classList.add("lh-1");
+          el.classList.add("me-1");
+          el.classList.remove("me-2");
         }
       },
       subNavigation: {
