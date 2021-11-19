@@ -4,15 +4,21 @@ import { ContextInfo } from "gd-sprest-bs";
  * Global Constants
  */
 
+// Global Path
+let SourceUrl: string = ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/";
+
 // Updates the strings for SPFx
 export const setContext = (context) => {
     // Set the page context
     ContextInfo.setPageContext(context);
 
+    // Update the global path
+    SourceUrl = ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/";
+
     // Update the values
-    Strings.EventRegConfig = ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/eventreg-config.json";
-    Strings.SourceUrl = ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/";
-    Strings.SolutionUrl = ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/index.html";
+    Strings.EventRegConfig = SourceUrl + "eventreg-config.json";
+    Strings.SolutionUrl = SourceUrl + "index.html";
+    Strings.SourceUrl = SourceUrl;
 }
 
 // Strings
@@ -24,9 +30,9 @@ const Strings = {
     },
     ProjectName: "Event Registration",
     ProjectDescription: "Allows users to sign up for events.",
-    EventRegConfig: ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/eventreg-config.json",
-    SourceUrl: ContextInfo.webServerRelativeUrl + "/SiteAssets/Event-Registration/",
-    SolutionUrl: ContextInfo.webServerRelativeUrl + "/sites/dev/SiteAssets/Event-Registration/index.html",
+    EventRegConfig: SourceUrl + "eventreg-config.json",
+    SolutionUrl: SourceUrl + "index.html",
+    SourceUrl: SourceUrl,
     Version: "0.1",
 };
 export default Strings;
