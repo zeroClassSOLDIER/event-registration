@@ -98,13 +98,7 @@ export class App {
       },
       navigation: {
         showFilter: false,
-        items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); }),
-        onSearchRendered: (el) => {
-          // Update the classnames
-          el.classList.add("lh-1");
-          el.classList.add("me-1");
-          el.classList.remove("me-2");
-        }
+        items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); })
       },
       subNavigation: {
         showFilter: this._isAdmin,
