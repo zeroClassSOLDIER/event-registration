@@ -70,7 +70,6 @@ export class App {
     this._dashboard = new Dashboard({
       el: this._el,
       useModal: true,
-      hideFilter: !this._isAdmin ? true : false,
       hideHeader: DataSource.Configuration.hideHeader,
       header: {
         title: DataSource.Configuration.headerTitle || Strings.ProjectName,
@@ -98,6 +97,7 @@ export class App {
         ],
       },
       navigation: {
+        showFilter: this._isAdmin,
         items: admin.generateNavItems(this._canEditEvent, () => { this.refresh(); }),
       },
       footer: {
@@ -223,7 +223,7 @@ export class App {
               let currReset = currDate.set({ hour: time.get('hour'), minute: time.get('minute') });
               let startReset = startDate.set({ hour: time.get('hour'), minute: time.get('minute') });
               let dateDiff = moment(startReset, "DD/MM/YYYY").diff(moment(currReset, "DD/MM/YYYY"), "hours");
-              console.log("dateDiff: " + moment(currReset).format("DD MMM YYYY hh:mm a") + " - " + moment(startReset).format("DD MMM YYYY hh:mm a") + " = " + dateDiff);
+              //console.log("dateDiff: " + moment(currReset).format("DD MMM YYYY hh:mm a") + " - " + moment(startReset).format("DD MMM YYYY hh:mm a") + " = " + dateDiff);
 
               // See if this event is cancelled
               if (item.IsCancelled) {
