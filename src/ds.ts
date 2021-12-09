@@ -54,6 +54,17 @@ export class DataSource {
     // Filter Set
     private static _filterSet: boolean = false;
     static get FilterSet(): boolean { return this._filterSet; }
+    static get ActiveEvents(): IEventItem[] {
+        let activeEvents: IEventItem[] = [];
+        let today = moment();
+        this._events.forEach((event) => {
+            let startDate = event.StartDate;
+            if(moment(startDate).isAfter(today)) {
+                activeEvents.push(event);
+            }
+        })
+        return activeEvents;
+    }
     static SetFilter(filterSet: boolean) {
         this._filterSet = filterSet;
     }
