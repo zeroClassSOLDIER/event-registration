@@ -54,24 +54,36 @@ export class DataSource {
     // Filter Set
     private static _filterSet: boolean = false;
     static get FilterSet(): boolean { return this._filterSet; }
-    static get ActiveEvents(): IEventItem[] {
-        let activeEvents: IEventItem[] = [];
-        let today = moment();
-        this._events.forEach((event) => {
-            let startDate = event.StartDate;
-            if(moment(startDate).isAfter(today)) {
-                activeEvents.push(event);
-            }
-        })
-        return activeEvents;
-    }
     static SetFilter(filterSet: boolean) {
         this._filterSet = filterSet;
     }
 
     // Events
     private static _events: IEventItem[] = null;
-    static get Events(): IEventItem[] { return this._events; }
+    static get Events(): IEventItem[] {
+        // See if we are filtering for active items
+        if (this.FilterSet) {
+            let activeEvents: IEventItem[] = [];
+            let today = moment();
+
+            // Parse the events
+            this._events.forEach((event) => {
+                let startDate = event.StartDate;
+
+                // See if this event is active
+                if (moment(startDate).isAfter(today)) {
+                    // Add the event
+                    activeEvents.push(event);
+                }
+            });
+
+            // Return the active events
+            return activeEvents;
+        }
+
+        // Return all of the events
+        return this._events;
+    }
     static loadEvents(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {

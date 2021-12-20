@@ -11,7 +11,6 @@ import { Member } from "./member";
 import { Registration } from "./registration";
 import Strings from "./strings";
 
-
 /**
  * Main Application
  */
@@ -88,10 +87,12 @@ export class App {
             items: DataSource.StatusFilters,
             onFilter: (value: string) => {
               let filterSet: boolean = value === "" ? false : true;
+
+              // Set the filter
               DataSource.SetFilter(filterSet);
-              this._dashboard.refresh(
-                value === "" ? DataSource.ActiveEvents : DataSource.Events
-              );
+
+              // Refresh the data source
+              this._dashboard.refresh(DataSource.Events);
             },
           },
         ],
@@ -111,7 +112,7 @@ export class App {
         ],
       },
       table: {
-        rows: DataSource.ActiveEvents,
+        rows: DataSource.Events,
         dtProps: {
           dom: 'rt<"row"<"col-sm-4"l><"col-sm-4"i><"col-sm-4"p>>',
           columnDefs: [
