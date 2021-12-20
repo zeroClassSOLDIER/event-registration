@@ -719,7 +719,7 @@ export class Admin {
       "@media print {",
       "\tbody * { visibility: hidden; }",
       "\t#core-modal, #core-modal * { visibility: visible; }",
-      "\t#core-modal { position: absolute; left: 0; top: 0; }",
+      "\t#core-modal .modal-content { position: absolute; left: 0; top: 0; }",
       "\t#core-modal .modal-footer, #core-modal .modal-footer *, #core-modal .modal-header, #core-modal .modal-header * { display: none; }",
       "}"
     ].join('\n');
