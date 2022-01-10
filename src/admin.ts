@@ -582,16 +582,40 @@ export class Admin {
                 }
               }
 
-              // Send the email
-              Utility().sendEmail({
-                To: members,
-                CC: pocs,
-                Body: values["EmailBody"].replace(/\n/g, "<br />"),
-                Subject: values["EmailSubject"]
-              }).execute(() => {
-                // Close the loading dialog
-                LoadingDialog.hide();
-              });
+              // Email POCs or Members based on selection
+              if (emailMembers && emailPOCs) {
+                // Send the email
+                Utility().sendEmail({
+                  To: members,
+                  CC: pocs,
+                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
+                  Subject: values["EmailSubject"]
+                }).execute(() => {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                });
+              } else if (emailMembers && !emailPOCs) {
+                // Send the email
+                Utility().sendEmail({
+                  To: members,
+                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
+                  Subject: values["EmailSubject"]
+                }).execute(() => {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                });
+              } else if (!emailMembers && emailPOCs) {
+                // Send the email
+                Utility().sendEmail({
+                  To: pocs,
+                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
+                  Subject: values["EmailSubject"]
+                }).execute(() => {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                });
+              }
+
             }
           }
         },
