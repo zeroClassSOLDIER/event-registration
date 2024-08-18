@@ -1,3 +1,5 @@
+[![Build & Package](https://github.com/spsprinkles/event-registration/actions/workflows/webpack.yml/badge.svg)](https://github.com/spsprinkles/event-registration/actions/workflows/webpack.yml)
+
 # E.R.A (Event Registration Application)
 A tool for organizers to create and manage events for airforce classes and training in SharePoint Online.
 

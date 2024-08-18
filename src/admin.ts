@@ -582,40 +582,40 @@ export class Admin {
                 }
               }
 
-              // Email POCs or Members based on selection
+              // Initialize the email TO and CC values
+              let To: string[], CC: string[] = null;
+
+              // See if we are emailing everyone
               if (emailMembers && emailPOCs) {
-                // Send the email
-                Utility().sendEmail({
-                  To: members,
-                  CC: pocs,
-                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
-                  Subject: values["EmailSubject"]
-                }).execute(() => {
-                  // Close the loading dialog
-                  LoadingDialog.hide();
-                });
-              } else if (emailMembers && !emailPOCs) {
-                // Send the email
-                Utility().sendEmail({
-                  To: members,
-                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
-                  Subject: values["EmailSubject"]
-                }).execute(() => {
-                  // Close the loading dialog
-                  LoadingDialog.hide();
-                });
-              } else if (!emailMembers && emailPOCs) {
-                // Send the email
-                Utility().sendEmail({
-                  To: pocs,
-                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
-                  Subject: values["EmailSubject"]
-                }).execute(() => {
-                  // Close the loading dialog
-                  LoadingDialog.hide();
-                });
+                To = members;
+                CC = pocs;
+              }
+              // Else, see if we are only sending mail to the members
+              else if (emailMembers && !emailPOCs) {
+                To = members;
+              }
+              // Else, see if we are only sending mail to the pocs
+              else if (!emailMembers && emailPOCs) {
+                To = pocs;
               }
 
+              // Ensure we are sending an email
+              if ((To && To.length > 0) || (CC && CC.length > 0)) {
+                // Send the email
+                Utility().sendEmail({
+                  To,
+                  CC,
+                  Body: values["EmailBody"].replace(/\n/g, "<br />"),
+                  Subject: values["EmailSubject"]
+                }).execute(() => {
+                  // Close the loading dialog
+                  LoadingDialog.hide();
+                });
+              } else {
+                // Close the loading dialog
+                LoadingDialog.hide();
+
+              }
             }
           }
         },
